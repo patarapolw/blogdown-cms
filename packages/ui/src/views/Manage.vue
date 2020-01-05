@@ -38,6 +38,11 @@ div
       )
         template(slot="detail" slot-scope="props")
           .content(v-html="preview(props.row.content)" style="max-height: 300px; overflow: scroll")
+        template(slot-scope="props")
+          b-table-column(field="date")
+            template(v-if="props.row.date") {{new Date(props.row.date).toDateString()}}
+          b-table-column(field="tag")
+            template(v-if="props.row.tag") {{props.row.tag.join(' ')}}
   b-modal(:active.sync="isEditTagsDialog" width=500)
     .card
       header.card-header
@@ -54,20 +59,21 @@ div
 <script lang="ts">
 import { Vue, Component, Watch } from 'vue-property-decorator'
 import matter from 'gray-matter'
+import { String } from 'runtypes'
+import { postApi } from '../api'
 
 @Component
 export default class BlogView extends Vue {
   selected: string[] = []
   headers = [
-    { label: '_id', field: '_id', width: 250 },
+    { label: 'id', field: 'id', width: 250 },
     { label: 'Title', field: 'title', sortable: true },
     { label: 'Type', field: 'type', width: 150, sortable: true },
     { label: 'Date', field: 'date', width: 200, sortable: true },
     { label: 'Tags', field: 'tag', width: 200, sortable: true },
   ]
 
-  items: any[] = [
-  ]
+  items: any[] = []
 
   expanded: any[] = []
   options: any = {}
@@ -90,39 +96,33 @@ export default class BlogView extends Vue {
 
   @Watch('$route', { deep: true })
   async load () {
-    // this.isLoading = true
-    // try {
-    //   const { q, page, limit, sortBy, desc } = this.$route.query
-    //   const perPage = limit ? parseInt(limit as string) : 10
-    //   const r = await (await fetch('/api/post/', {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify({
-    //       q,
-    //       offset: page ? (parseInt(page as string) - 1) * perPage : 0,
-    //       limit: perPage,
-    //       sort: sortBy ? {
-    //         key: sortBy,
-    //         desc: desc === 'true',
-    //       } : undefined,
-    //     }),
-    //   })).json()
-    //   this.items = r.data.map((d: any) => {
-    //     d.date = d.date ? new Date(d.date).toDateString() : undefined
-    //     d.tag = d.tag ? d.tag.join(', ') : undefined
-    //     return d
-    //   })
-    //   this.count = r.count
-    // } catch (e) {
-    //   this.$buefy.snackbar.open({
-    //     message: e.toString(),
-    //     type: 'is-danger',
-    //   })
-    // } finally {
-    //   this.isLoading = false
-    // }
+    this.isLoading = true
+    try {
+      const { q, page, limit, sort, desc } = this.$route.query
+      const perPage = limit ? parseInt(limit as string) : 10
+
+      const r = await postApi.find({
+        body: {
+          q: String.check(q),
+          offset: page ? (parseInt(page as string) - 1) * perPage : 0,
+          limit: limit ? parseInt(limit as string) : 10,
+          sort: sort ? {
+            key: String.check(sort),
+            desc: desc === 'true',
+          } : undefined,
+        },
+      })
+
+      this.items = r.data.data
+      this.count = r.data.total
+    } catch (e) {
+      this.$buefy.snackbar.open({
+        message: e.toString(),
+        type: 'is-danger',
+      })
+    } finally {
+      this.isLoading = false
+    }
   }
 
   preview (raw: string): string {
@@ -150,26 +150,18 @@ export default class BlogView extends Vue {
 
   async editTags () {
     if (this.isAddTags) {
-      await fetch('/api/post/tags', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      postApi.addTags({
+        body: {
           ids: this.selected,
           tags: this.newTags.split(' '),
-        }),
+        },
       })
     } else {
-      await fetch('/api/post/tags', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      postApi.addTags({
+        body: {
           ids: this.selected,
           tags: this.newTags.split(' '),
-        }),
+        },
       })
     }
     this.load()

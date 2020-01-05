@@ -1,0 +1,23 @@
+{
+  "name": "@blogdown-cms/api",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "license": "MIT",
+  "private": true,
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prebuild": "tsc",
+    "build": "true"
+  },
+  "dependencies": {
+    "rest-ts-core": "^0.5.0"
+  },
+  "devDependencies": {
+    "typescript": "^3.7.4"
+  }
+}

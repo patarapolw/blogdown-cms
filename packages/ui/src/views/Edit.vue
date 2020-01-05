@@ -25,6 +25,8 @@ import matter from 'gray-matter'
 import CodeMirror from 'codemirror'
 import moment from 'moment'
 import showdown from 'showdown'
+import { mediaApi, postApi } from '../api'
+import { String, Undefined, Array } from 'runtypes'
 
 declare global {
   namespace CodeMirror {
@@ -45,7 +47,7 @@ export default class Edit extends Vue {
   }
 
   headers: any = {}
-  currentId: string | null = null
+  currentId?: string
   html = ''
   line = 0
   hasPreview = false
@@ -70,11 +72,11 @@ export default class Edit extends Vue {
             const blob: File = item.getAsFile()
             const formData = new FormData()
             formData.append('file', blob)
-            fetch('/api/media/', {
-              method: 'PUT',
-              body: formData,
-            }).then((r) => r.json()).then((r) => {
-              ins.getDoc().replaceRange(`![${blob.name}](/api/media/${r._id})`, ins.getCursor())
+
+            mediaApi.put({
+              data: formData,
+            }).then((r) => {
+              ins.getDoc().replaceRange(`![${blob.name}](/api/media/${r.data.id})`, ins.getCursor())
             })
           }
         }
@@ -160,13 +162,16 @@ export default class Edit extends Vue {
     }
     if (id && id !== this.currentId) {
       this.currentId = id as string
-      const url = `/api/post/${id}`
       try {
-        const { title, date, tag, hidden, type, content } = await (await fetch(url, {
-          method: 'POST',
-        })).json()
-        const m = matter(content)
-        this.code = matter.stringify(m.content, JSON.parse(JSON.stringify({ ...m.data, title, date, tag, hidden, type })))
+        const r = await postApi.get({
+          params: {
+            id: this.currentId,
+          },
+        })
+
+        const { teaser, remaining, title, date, tag, header } = r.data
+
+        this.code = matter.stringify(`${teaser}\n===\n${remaining}`, { title, date, tag, ...header })
         this.isEdited = false
         this.$nextTick(() => {
           this.isEdited = false
@@ -185,23 +190,29 @@ export default class Edit extends Vue {
       return
     }
     try {
-      const { _id } = await (await fetch('/api/post/', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
+      const m = matter(this.code)
+      const [teaser, remaining] = m.content.split(/\n===\n(.+)/s)
+      const { title, date, tag, ...header } = m.data
+
+      const r = await postApi.createOrUpdate({
+        body: {
+          id: this.currentId,
+          title: String.check(title),
+          date: String.Or(Undefined).check(
+            date instanceof Date ? date.toISOString() : date,
+          ),
+          tag: Array(String).check(tag || []),
+          header,
+          teaser: teaser || m.content,
+          remaining: remaining || '',
         },
-        body: JSON.stringify({
-          ...this.headers,
-          _id: this.currentId || undefined,
-          newId: this.headers._id,
-          content: this.code,
-        }),
-      })).json()
-      if (_id) {
+      })
+
+      if (!this.currentId) {
         this.$router.push({
           query: {
             ...this.$route.query,
-            id: _id,
+            id: r.data.id,
           },
         })
       };
