@@ -24,25 +24,25 @@ div
         checkable
         :checked-rows.sync="selected"
         :loading="isLoading"
+        detailed
         show-detail-icon
 
         paginated
         backend-pagination
         :total="count"
         :per-page="10"
-        @page-change="watchTable"
+        @page-change="onPageChanged"
 
         backend-sorting
-        :default-sort="sortBy.key"
-        @sort="watchTable"
+        :default-sort="['date', 'desc']"
+        @sort="onSort"
       )
         template(slot="detail" slot-scope="props")
-          .content(v-html="preview(props.row.content)" style="max-height: 300px; overflow: scroll")
-        template(slot-scope="props")
-          b-table-column(field="date")
-            template(v-if="props.row.date") {{new Date(props.row.date).toDateString()}}
-          b-table-column(field="tag")
-            template(v-if="props.row.tag") {{props.row.tag.join(' ')}}
+          .content(
+            v-html="preview(props.row.teaser)"
+            style="max-height: 300px; overflow: scroll"
+            @click="onRowClicked(props.row.id)"
+          )
   b-modal(:active.sync="isEditTagsDialog" width=500)
     .card
       header.card-header
@@ -75,19 +75,11 @@ export default class BlogView extends Vue {
 
   items: any[] = []
 
-  expanded: any[] = []
-  options: any = {}
-
   isLoading = false
   count = 0
   isEditTagsDialog = false
   isAddTags = true
   newTags = ''
-
-  sortBy = {
-    key: 'date',
-    desc: false,
-  }
 
   mounted () {
     this.load()
@@ -98,24 +90,34 @@ export default class BlogView extends Vue {
   async load () {
     this.isLoading = true
     try {
-      const { q, page, limit, sort, desc } = this.$route.query
-      const perPage = limit ? parseInt(limit as string) : 10
+      const { q, page, sort, order } = this.$route.query
+      const perPage = 10
 
       const r = await api.request({
         url: '/api/post',
         method: 'POST',
         data: {
-          q: String.check(q),
+          q: String.check(q || ''),
           offset: page ? (parseInt(page as string) - 1) * perPage : 0,
-          limit: limit ? parseInt(limit as string) : 10,
+          limit: perPage,
           sort: sort ? {
             key: String.check(sort),
-            desc: desc === 'true',
+            desc: order === 'desc',
           } : undefined,
         },
       })
 
-      this.items = r.data.data
+      this.items = r.data.data.map((d: any) => {
+        if (d.tag) {
+          d.tag = d.tag.join(' ')
+        }
+
+        if (d.date) {
+          d.date = new Date(d.date).toDateString()
+        }
+
+        return d
+      })
       this.count = r.data.count
     } catch (e) {
       this.$buefy.snackbar.open({
@@ -132,20 +134,21 @@ export default class BlogView extends Vue {
     return content.split(/\r?\n(===|---)\r?\n/)[0]
   }
 
-  @Watch('options', { deep: true })
-  watchTable (options: {
-    page: number
-    sortBy: string[]
-    sortDesc: boolean[]
-    itemsPerPage: number
-  }) {
+  onPageChanged (page: number) {
     this.$router.push({
       query: {
         ...this.$route.query,
-        page: options.page ? options.page.toString() : undefined,
-        sortBy: options.sortBy[0],
-        desc: options.sortDesc[0] ? options.sortDesc[0].toString() : undefined,
-        limit: options.itemsPerPage > 0 ? options.itemsPerPage.toString() : undefined,
+        page: page.toString(),
+      },
+    })
+  }
+
+  onSort (sort: string, order: string) {
+    this.$router.push({
+      query: {
+        ...this.$route.query,
+        sort,
+        order,
       },
     })
   }
@@ -181,8 +184,8 @@ export default class BlogView extends Vue {
   remove () {
   }
 
-  clickRow (data: any) {
-    const url = this.$router.resolve({ path: '/admin/post/edit', query: { id: data._id } })
+  onRowClicked (id: string) {
+    const url = this.$router.resolve({ path: '/edit', query: { id } })
     open(url.href, '_blank')
   }
 }

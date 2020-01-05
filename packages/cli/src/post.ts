@@ -34,7 +34,7 @@ export default (app: Router, config: {
 
     return {
       data: await cursor.skip(offset).limit(limit),
-      count: (await config.db.find<IEntryFullId>(p.result.cond).projection('id')).length,
+      count: (await config.db.find<IEntryFullId>(p.result.cond, { id: 1 } as any)).length,
     }
   })
 

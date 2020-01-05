@@ -176,7 +176,7 @@ export default class Edit extends Vue {
         const { teaser, remaining, title, date, tag, type, header } = r.data
 
         this.code = matter.stringify(
-          `${teaser}\n===\n${remaining}`,
+          `${teaser}\n\n===\n\n${remaining}`,
           Object.entries(
             { title, date, tag, type, ...header },
           ).reduce((a, [k, v]) => (v === undefined ? a : { ...a, [k]: v }), {}),
@@ -200,7 +200,7 @@ export default class Edit extends Vue {
     }
     try {
       const m = matter(this.code)
-      const [teaser, remaining] = m.content.split(/\n===\n(.+)/s)
+      const [teaser, remaining] = m.content.split(/\n\n===\n\n(.+)/s)
       const { title, date, tag, type, ...header } = m.data
 
       const r = await api.request({
