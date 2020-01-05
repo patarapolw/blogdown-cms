@@ -14,7 +14,6 @@
     "@vue/cli-plugin-router": "^4.1.0",
     "@vue/cli-plugin-typescript": "^4.1.0",
     "@vue/cli-service": "^4.1.0",
-    "axios": "^0.18.0",
     "buefy": "^0.8.9",
     "codemirror": "^5.50.2",
     "core-js": "^3.4.4",
@@ -22,7 +21,6 @@
     "moment": "^2.24.0",
     "pug": "^2.0.4",
     "pug-plain-loader": "^1.0.0",
-    "rest-ts-axios": "^0.5.0",
     "runtypes": "^4.0.3",
     "sass": "^1.23.7",
     "sass-loader": "^8.0.0",
@@ -41,5 +39,8 @@
   ],
   "publishConfig": {
     "access": "public"
+  },
+  "dependencies": {
+    "@typed-rest/axios": "^0.1.2"
   }
 }

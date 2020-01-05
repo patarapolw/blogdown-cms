@@ -60,7 +60,7 @@ div
 import { Vue, Component, Watch } from 'vue-property-decorator'
 import matter from 'gray-matter'
 import { String } from 'runtypes'
-import { postApi } from '../api'
+import api from '../api'
 
 @Component
 export default class BlogView extends Vue {
@@ -101,8 +101,10 @@ export default class BlogView extends Vue {
       const { q, page, limit, sort, desc } = this.$route.query
       const perPage = limit ? parseInt(limit as string) : 10
 
-      const r = await postApi.find({
-        body: {
+      const r = await api.request({
+        url: '/api/post',
+        method: 'POST',
+        data: {
           q: String.check(q),
           offset: page ? (parseInt(page as string) - 1) * perPage : 0,
           limit: limit ? parseInt(limit as string) : 10,
@@ -114,7 +116,7 @@ export default class BlogView extends Vue {
       })
 
       this.items = r.data.data
-      this.count = r.data.total
+      this.count = r.data.count
     } catch (e) {
       this.$buefy.snackbar.open({
         message: e.toString(),
@@ -150,15 +152,19 @@ export default class BlogView extends Vue {
 
   async editTags () {
     if (this.isAddTags) {
-      postApi.addTags({
-        body: {
+      api.request({
+        url: '/api/post/tag',
+        method: 'PUT',
+        data: {
           ids: this.selected,
           tags: this.newTags.split(' '),
         },
       })
     } else {
-      postApi.addTags({
-        body: {
+      api.request({
+        url: '/api/post/tag',
+        method: 'DELETE',
+        data: {
           ids: this.selected,
           tags: this.newTags.split(' '),
         },

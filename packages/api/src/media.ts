@@ -1,11 +1,14 @@
-import { PUT, defineAPI } from 'rest-ts-core'
-
-class MediaPutResponse {
-  constructor (
-    public readonly id: string,
-  ) {}
+export interface IMediaApi {
+  '/media': {
+    PUT: {
+      response: {
+        url: string
+      }
+    }
+  }
+  '/media/*': {
+    GET: {
+      params: [string]
+    }
+  }
 }
-
-export const mediaApiDef = defineAPI({
-  put: PUT`/media`.response(MediaPutResponse),
-})

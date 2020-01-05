@@ -25,7 +25,7 @@ import matter from 'gray-matter'
 import CodeMirror from 'codemirror'
 import moment from 'moment'
 import showdown from 'showdown'
-import { mediaApi, postApi } from '../api'
+import api from '../api'
 import { String, Undefined, Array } from 'runtypes'
 
 declare global {
@@ -73,10 +73,12 @@ export default class Edit extends Vue {
             const formData = new FormData()
             formData.append('file', blob)
 
-            mediaApi.put({
+            api.request({
+              url: '/media',
+              method: 'PUT',
               data: formData,
             }).then((r) => {
-              ins.getDoc().replaceRange(`![${blob.name}](/api/media/${r.data.id})`, ins.getCursor())
+              ins.getDoc().replaceRange(`![${blob.name}](${r.data.url})`, ins.getCursor())
             })
           }
         }
@@ -163,15 +165,22 @@ export default class Edit extends Vue {
     if (id && id !== this.currentId) {
       this.currentId = id as string
       try {
-        const r = await postApi.get({
+        const r = await api.request({
+          url: '/api/post',
+          method: 'GET',
           params: {
             id: this.currentId,
           },
         })
 
-        const { teaser, remaining, title, date, tag, header } = r.data
+        const { teaser, remaining, title, date, tag, type, header } = r.data
 
-        this.code = matter.stringify(`${teaser}\n===\n${remaining}`, { title, date, tag, ...header })
+        this.code = matter.stringify(
+          `${teaser}\n===\n${remaining}`,
+          Object.entries(
+            { title, date, tag, type, ...header },
+          ).reduce((a, [k, v]) => (v === undefined ? a : { ...a, [k]: v }), {}),
+        )
         this.isEdited = false
         this.$nextTick(() => {
           this.isEdited = false
@@ -192,11 +201,15 @@ export default class Edit extends Vue {
     try {
       const m = matter(this.code)
       const [teaser, remaining] = m.content.split(/\n===\n(.+)/s)
-      const { title, date, tag, ...header } = m.data
+      const { title, date, tag, type, ...header } = m.data
 
-      const r = await postApi.createOrUpdate({
-        body: {
+      const r = await api.request({
+        url: '/api/post',
+        method: 'PUT',
+        params: {
           id: this.currentId,
+        },
+        data: {
           title: String.check(title),
           date: String.Or(Undefined).check(
             date instanceof Date ? date.toISOString() : date,
@@ -205,6 +218,7 @@ export default class Edit extends Vue {
           header,
           teaser: teaser || m.content,
           remaining: remaining || '',
+          type,
         },
       })
 

@@ -1,0 +1,38 @@
+{
+  "name": "@blogdown-cms/cli",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "license": "MIT",
+  "private": true,
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "true",
+    "postbuild": "tsc"
+  },
+  "dependencies": {
+    "@blogdown-cms/api": "*",
+    "@blogdown-cms/ui": "*",
+    "@typed-rest/express": "^0.1.2",
+    "express": "^4.17.1",
+    "express-fileupload": "^1.1.6",
+    "fs-extra": "^8.1.0",
+    "nedb-promises": "^4.0.1",
+    "q2filter": "^1.1.0",
+    "runtypes": "^4.0.3",
+    "uuid": "^3.3.3",
+    "yargs": "^15.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.2",
+    "@types/express-fileupload": "^1.1.0",
+    "@types/fs-extra": "^8.0.1",
+    "@types/uuid": "^3.4.6",
+    "@types/yargs": "^13.0.4",
+    "typescript": "^3.7.4"
+  }
+}

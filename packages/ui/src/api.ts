@@ -1,10 +1,8 @@
-import axios from 'axios'
-import { createConsumer } from 'rest-ts-axios'
-import { mediaApiDef, postApiDef } from '@blogdown-cms/api'
+import axios from '@typed-rest/axios'
+import { IMediaApi, IPostApi } from '@blogdown-cms/api'
 
-const driver = axios.create({
+const api = axios.create<IMediaApi & IPostApi>({
   baseURL: 'http://localhost:3000',
 })
 
-export const mediaApi = createConsumer(mediaApiDef, driver)
-export const postApi = createConsumer(postApiDef, driver)
+export default api
