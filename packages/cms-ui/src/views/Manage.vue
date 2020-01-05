@@ -1,24 +1,26 @@
 <template lang="pug">
-.d-flex.flex-column.pa-0
-  div(style="position: fixed; z-index: 100; width: calc(100% - 256px); padding: 10px")
-    b-navbar.elevation-1
-      template(slot="end")
-        b-navbar-item(tag="div")
-          .buttons
-            button.button(@click="open('#/edit', '_blank')") New
-            button.button(@click="load") Reload
-            b-dropdown(aria-role="list" position="is-bottom-left")
-              button.button(:disabled="selected.length === 0" slot="trigger") Batch Edit
-              b-dropdown-item(aria-role="listitem" has-link)
-                button(@click="(isEditTagsDialog = true) && (isAddTags = true)") Add tags
-              b-dropdown-item(aria-role="listitem" has-link)
-                button(@click="(isEditTagsDialog = true) && (isAddTags = false)") Remove tags
-              b-dropdown-item(aria-role="listitem" has-link)
-                button(@click="(isEditTagsDialog = true) && (isAddTags = true)") Delete
-  .columns(style="overflow-y: scroll; margin-top: 75px")
+div
+  b-navbar.elevation-1
+    template(slot="end")
+      b-navbar-item(tag="div")
+        .buttons
+          button.button(@click="$router.push('/edit')") New
+          button.button(@click="load") Reload
+          b-dropdown(aria-role="list" position="is-bottom-left")
+            button.button(:disabled="selected.length === 0" slot="trigger")
+              | Batch Edit
+              b-icon(icon="menu-down")
+            b-dropdown-item(aria-role="listitem" has-link)
+              button(@click="(isEditTagsDialog = true) && (isAddTags = true)") Add tags
+            b-dropdown-item(aria-role="listitem" has-link)
+              button(@click="(isEditTagsDialog = true) && (isAddTags = false)") Remove tags
+            b-dropdown-item(aria-role="listitem" has-link)
+              button(@click="(isEditTagsDialog = true) && (isAddTags = true)") Delete
+  .columns
     .column
       b-table(
         :data="items"
+        :columns="headers"
         checkable
         :checked-rows.sync="selected"
         :loading="isLoading"
@@ -28,16 +30,14 @@
         backend-pagination
         :total="count"
         :per-page="10"
-        @page-change="onPageChanged"
+        @page-change="watchTable"
 
         backend-sorting
-        :default-sort="sortBy"
-        @sort="onSort"
+        :default-sort="sortBy.key"
+        @sort="watchTable"
       )
         template(slot="detail" slot-scope="props")
           .content(v-html="preview(props.row.content)" style="max-height: 300px; overflow: scroll")
-        template(slot-scope="props")
-          b-table-column(v-for="h in headers" :key="h.value" :label="h.text" :width="h.width" :sortable="h.value !== '_id'")
   b-modal(:active.sync="isEditTagsDialog" width=500)
     .card
       header.card-header
@@ -59,14 +59,16 @@ import matter from 'gray-matter'
 export default class BlogView extends Vue {
   selected: string[] = []
   headers = [
-    { text: '_id', value: '_id', width: 250 },
-    { text: 'Title', value: 'title' },
-    { text: 'Type', value: 'type', width: 150 },
-    { text: 'Date', value: 'date', width: 200 },
-    { text: 'Tags', value: 'tag', width: 200 },
+    { label: '_id', field: '_id', width: 250 },
+    { label: 'Title', field: 'title', sortable: true },
+    { label: 'Type', field: 'type', width: 150, sortable: true },
+    { label: 'Date', field: 'date', width: 200, sortable: true },
+    { label: 'Tags', field: 'tag', width: 200, sortable: true },
   ]
 
-  items: any[] = []
+  items: any[] = [
+  ]
+
   expanded: any[] = []
   options: any = {}
 
@@ -76,6 +78,11 @@ export default class BlogView extends Vue {
   isAddTags = true
   newTags = ''
 
+  sortBy = {
+    key: 'date',
+    desc: false,
+  }
+
   mounted () {
     this.load()
     document.getElementsByTagName('title')[0].innerText = 'Blogdown CMS'
@@ -83,39 +90,39 @@ export default class BlogView extends Vue {
 
   @Watch('$route', { deep: true })
   async load () {
-    this.isLoading = true
-    try {
-      const { q, page, limit, sortBy, desc } = this.$route.query
-      const perPage = limit ? parseInt(limit as string) : 10
-      const r = await (await fetch('/api/post/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          q,
-          offset: page ? (parseInt(page as string) - 1) * perPage : 0,
-          limit: perPage,
-          sort: sortBy ? {
-            key: sortBy,
-            desc: desc === 'true',
-          } : undefined,
-        }),
-      })).json()
-      this.items = r.data.map((d: any) => {
-        d.date = d.date ? new Date(d.date).toDateString() : undefined
-        d.tag = d.tag ? d.tag.join(', ') : undefined
-        return d
-      })
-      this.count = r.count
-    } catch (e) {
-      this.$buefy.snackbar.open({
-        message: e.toString(),
-        type: 'is-danger',
-      })
-    } finally {
-      this.isLoading = false
-    }
+    // this.isLoading = true
+    // try {
+    //   const { q, page, limit, sortBy, desc } = this.$route.query
+    //   const perPage = limit ? parseInt(limit as string) : 10
+    //   const r = await (await fetch('/api/post/', {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify({
+    //       q,
+    //       offset: page ? (parseInt(page as string) - 1) * perPage : 0,
+    //       limit: perPage,
+    //       sort: sortBy ? {
+    //         key: sortBy,
+    //         desc: desc === 'true',
+    //       } : undefined,
+    //     }),
+    //   })).json()
+    //   this.items = r.data.map((d: any) => {
+    //     d.date = d.date ? new Date(d.date).toDateString() : undefined
+    //     d.tag = d.tag ? d.tag.join(', ') : undefined
+    //     return d
+    //   })
+    //   this.count = r.count
+    // } catch (e) {
+    //   this.$buefy.snackbar.open({
+    //     message: e.toString(),
+    //     type: 'is-danger',
+    //   })
+    // } finally {
+    //   this.isLoading = false
+    // }
   }
 
   preview (raw: string): string {

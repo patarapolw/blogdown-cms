@@ -1,22 +1,21 @@
 <template lang="pug">
-.h-100.d-flex.flex-column.pa-0
-  div(style="position: fixed; z-index: 100; width: calc(100% - 256px); padding: 10px")
-    b-navbar.elevation-1
-      template(slot="brand")
-        b-navbar-item {{headers.title ? `${headers.title} ${date ? `(${date.toDateString()})` : ""}` : ""}}
-      template(slot="end")
-        b-navbar-item(tag="div")
-          .buttons
-            button(@click="onTogglePreviewClicked") {{hasPreview ? "Hide Preview" : "Show Preview"}}
-            button(:disabled="!fileUrl" @click="openInExternal") Open in external
-            button(@click="reset") New
-            button(@click="load") Reload
-            button(:disabled="!canSave" @click="save") Save
-  .columns(style="overflow-y: scroll; margin-top: 75px")
-    .column(:class="hasPreview ? 'col-6 pr-0' : 'col-12'")
+.h-100
+  b-navbar.has-shadow
+    template(slot="brand")
+      b-navbar-item {{headers.title ? `${headers.title} ${date ? `(${date.toDateString()})` : ""}` : ""}}
+    template(slot="end")
+      b-navbar-item(tag="div")
+        .buttons
+          button.button(@click="onTogglePreviewClicked") {{hasPreview ? "Hide Preview" : "Show Preview"}}
+          button.button(:disabled="!fileUrl" @click="openInExternal") Open in external
+          button.button(@click="reset") New
+          button.button(@click="load") Reload
+          button.button(:disabled="!canSave" @click="save") Save
+  .columns.h-100
+    .column.h-100(:class="hasPreview ? 'col-6 pr-0' : 'col-12'")
       codemirror.h-100(ref="cm" v-model="code" :options="cmOptions" @input="onCmCodeChange")
-    .column(v-show="hasPreview" ref="previewHolder" style="width: 50%")
-      .card.h-100.pa-3(v-if="!isReveal")
+    .column.h-100(v-show="hasPreview" ref="previewHolder" style="width: 50%")
+      .card.h-100.p-3
         .card-content.content(v-html="html")
 </template>
 
@@ -36,7 +35,7 @@ declare global {
 }
 
 @Component
-export default class PostEdit extends Vue {
+export default class Edit extends Vue {
   code = ''
   cmOptions = {
     mode: {
@@ -236,3 +235,13 @@ export default class PostEdit extends Vue {
   }
 }
 </script>
+
+<style lang="scss">
+.h-100 {
+  height: 100vh;
+}
+
+.CodeMirror, .CodeMirror-scroll {
+  height: 100%;
+}
+</style>
