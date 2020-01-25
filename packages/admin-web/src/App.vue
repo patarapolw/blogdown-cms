@@ -6,14 +6,17 @@ div
         span(style="margin-right: 0.2em;") Blogdown
         strong CMS
     template(slot="start")
-      b-navbar-item(tag="router-link" to="/posts") Posts
-      b-navbar-item(tag="router-link" to="/comments") Comments
-      b-navbar-item(tag="router-link" to="/media") Media
+      b-navbar-item(tag="router-link" to="/posts" :class="$route.path === '/posts' ? 'is-active' : ''") Posts
+      b-navbar-item(tag="router-link" to="/comments" :class="$route.path === '/comments' ? 'is-active' : ''") Comments
+      b-navbar-item(tag="router-link" to="/media" :class="$route.path === '/media' ? 'is-active' : ''") Media
     template(slot="end")
-      b-field(style="align-self: center; margin-right: 1em;")
-        b-input(placeholder="Search..." type="search" icon="search")
-        p.control
-          b-button.search.has-background-grey-lighter Search
+      b-navbar-item(tag="div")
+        b-field
+          b-input(placeholder="Search..." type="search" icon="search")
+          p.control
+            b-button.search.has-background-grey-lighter Search
+      b-navbar-item(href="https://www.github.com/patarapolw/blogdown-cms" target="_blank" style="margin-right: 1em;")
+        fontawesome(:icon="['fab', 'github']" size="lg")
   router-view
 </template>
 

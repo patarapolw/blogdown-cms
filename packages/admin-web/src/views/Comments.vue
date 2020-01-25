@@ -4,16 +4,11 @@
     template(slot="end")
       b-navbar-item(tag="div")
         .buttons
-          router-link.button(to="/posts/edit") New
           button.button(@click="load") Reload
           b-dropdown(aria-role="list" position="is-bottom-left")
             button.button(:disabled="selected.length === 0" slot="trigger")
               span(style="margin-right: 0.5em") Batch Edit
               b-icon(icon="angle-down")
-            b-dropdown-item(aria-role="listitem" has-link)
-              button(@click="(isEditTagsDialog = true) && (isAddTags = true)") Add tags
-            b-dropdown-item(aria-role="listitem" has-link)
-              button(@click="(isEditTagsDialog = true) && (isAddTags = false)") Remove tags
             b-dropdown-item(aria-role="listitem" has-link)
               button Delete
   .columns
@@ -43,24 +38,6 @@
             style="max-height: 300px; overflow: scroll"
             @click="onRowClicked(props.row.id)"
           )
-  b-modal(:active.sync="isEditTagsDialog" :width="500")
-    .card
-      header.card-header
-        .card-header-title {{isAddTags ? 'Add tags' : 'Remove tags'}}
-      .card-content
-        b-field
-          b-taginput(
-            v-if="isAddTags"
-            v-model="tagList" ellipsis icon="tag" placeholder="Add tags"
-            autocomplete open-on-focus @typing="getFilteredTags"
-            :data="existingTags" allow-new
-          )
-          b-taglist(v-else)
-            b-tag(v-for="t in tagList" :key="t" closable @close="removeTag(t)")
-        .buttons
-          div(style="flex-grow: 1;")
-          button.buttons(@click="editTags() && (isEditTagsDialog = false)") Save
-          button.buttons(@click="isEditTagsDialog = false") Close
 </template>
 
 <script lang="ts">
@@ -71,10 +48,9 @@ export default class Posts extends Vue {
   selected: any[] = []
   headers = [
     { label: 'id', field: 'id', width: 250 },
-    { label: 'Title', field: 'title', sortable: true },
-    { label: 'Type', field: 'type', width: 150, sortable: true },
-    { label: 'Published by', field: 'date', width: 200, sortable: true },
-    { label: 'Tags', field: 'tag', width: 200, sortable: true },
+    { label: 'Preview', field: 'preview', sortable: true },
+    { label: 'Author', field: 'author', width: 150, sortable: true },
+    { label: 'Date', field: 'date', width: 200, sortable: true },
   ]
 
   items: any[] = []

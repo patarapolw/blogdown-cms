@@ -3,10 +3,12 @@
   .columns(style="margin-top: 1em;")
     .column
       b-collapse.card(aria-id="header" style="margin-bottom: 1em;")
-        .card-header(slot="trigger" slot-scope="props" role="button" aria-controls="header")
+        .card-header(slot="trigger" slot-scope="props" role="button" aria-controls="header" style="align-items: center;")
           p.card-header-title
             span(v-if="title") {{title}}
             span.has-text-danger(v-else) {{noTitle}}
+          div(style="flex-grow: 1;")
+          b-button.is-success(:disabled="!title") Save
           a.card-header-icon
             b-icon(:icon="props.open ? 'angle-down' : 'angle-up'")
         .card-content
@@ -16,21 +18,19 @@
             :message="title ? '' : noTitle"
           )
             b-input(v-model="title")
-          b-field(label="Publish by")
+          b-field(label="Published by")
             b-datetimepicker(
-              rounded placeholder="Click to select..." icon="calendar-alt"
+              rounded icon="calendar-alt"
               :datetime-formatter="formatDate"
-              v-model="publishBy"
+              v-model="publishedBy"
             )
           b-field(label="Tags")
             b-taginput(
-              v-model="tag" ellipsis icon="tag" placeholder="Add a tag"
+              v-model="tag" ellipsis icon="tag" placeholder="Add tags"
               autocomplete allow-new open-on-focus :data="existingTags" @typing="getFilteredTags"
             )
           b-field
             b-switch(v-model="isDraft") Draft
-            div(style="flex-grow: 1;")
-            b-button.is-success(:disabled="!title") Save
       codemirror(v-model="markdown")
     .column
       .card(style="min-height: 100%")
@@ -45,10 +45,11 @@ import MakeHtml from '../make-html'
 @Component
 export default class PostEdit extends Vue {
   title = ''
-  publishBy = new Date()
+  publishedBy = new Date()
   markdown = ''
   isDraft = false
-  tag = []
+  tag: string[] = []
+  existingTags: string[] = []
 
   readonly noTitle = 'Please input a title'
 
@@ -60,6 +61,10 @@ export default class PostEdit extends Vue {
 
   get html () {
     return this.makeHtml.parse(this.markdown)
+  }
+
+  getFilteredTags () {
+
   }
 }
 </script>

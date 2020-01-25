@@ -4,16 +4,12 @@
     template(slot="end")
       b-navbar-item(tag="div")
         .buttons
-          router-link.button(to="/posts/edit") New
+          button.button(@click="isAddMedia = true") Upload
           button.button(@click="load") Reload
           b-dropdown(aria-role="list" position="is-bottom-left")
             button.button(:disabled="selected.length === 0" slot="trigger")
               span(style="margin-right: 0.5em") Batch Edit
               b-icon(icon="angle-down")
-            b-dropdown-item(aria-role="listitem" has-link)
-              button(@click="(isEditTagsDialog = true) && (isAddTags = true)") Add tags
-            b-dropdown-item(aria-role="listitem" has-link)
-              button(@click="(isEditTagsDialog = true) && (isAddTags = false)") Remove tags
             b-dropdown-item(aria-role="listitem" has-link)
               button Delete
   .columns
@@ -43,46 +39,62 @@
             style="max-height: 300px; overflow: scroll"
             @click="onRowClicked(props.row.id)"
           )
-  b-modal(:active.sync="isEditTagsDialog" :width="500")
+  b-modal(:active.sync="isAddMedia" :width="500")
     .card
       header.card-header
-        .card-header-title {{isAddTags ? 'Add tags' : 'Remove tags'}}
+        .card-header-title Upload Media
       .card-content
-        b-field
-          b-taginput(
-            v-if="isAddTags"
-            v-model="tagList" ellipsis icon="tag" placeholder="Add tags"
-            autocomplete open-on-focus @typing="getFilteredTags"
-            :data="existingTags" allow-new
-          )
-          b-taglist(v-else)
-            b-tag(v-for="t in tagList" :key="t" closable @close="removeTag(t)")
+        b-field(style="text-align: center;")
+          b-upload(v-model="newFiles" multiple drag-drop @input="")
+            section.section
+              .has-text-centered
+                b-icon(icon="upload" size="is-large")
+                p Drop your files here or click to upload
+        b-taglist
+          b-tag(v-for="f in newFiles" :key="f.name" closable @close="onRemoveMedia(f)") {{f.name}}
         .buttons
           div(style="flex-grow: 1;")
-          button.buttons(@click="editTags() && (isEditTagsDialog = false)") Save
-          button.buttons(@click="isEditTagsDialog = false") Close
+          button.button.is-success(:disabled="newFiles.length === 0" @click="addMedia()") Save
+          button.button.is-danger(@click="isAddMedia = false") Close
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator'
+import { Component, Vue, Watch } from 'vue-property-decorator'
 
 @Component
 export default class Posts extends Vue {
   selected: any[] = []
   headers = [
-    { label: 'id', field: 'id', width: 250 },
-    { label: 'Title', field: 'title', sortable: true },
-    { label: 'Type', field: 'type', width: 150, sortable: true },
-    { label: 'Published by', field: 'date', width: 200, sortable: true },
-    { label: 'Tags', field: 'tag', width: 200, sortable: true },
+    { label: 'id', field: 'id', width: 150 },
+    { label: 'Name', field: 'name', width: 250, sortable: true },
+    { label: 'Preview', field: 'preview', sortable: true },
+    { label: 'Date', field: 'date', width: 200, sortable: true },
   ]
 
   items: any[] = []
 
   isLoading = false
   count = 0
-  isEditTagsDialog = false
-  isAddTags = true
-  newTags = ''
+  isAddMedia = false
+  newFiles: File[] = []
+
+  load () {
+
+  }
+
+  addMedia () {
+    this.isAddMedia = false
+  }
+
+  @Watch('isAddMedia')
+  onAddMediaOpen (open: boolean) {
+    if (open) {
+      this.$set(this, 'newFiles', [])
+    }
+  }
+
+  onRemoveMedia (f0: File) {
+    this.$set(this, 'newFiles', this.newFiles.filter((f) => f !== f0))
+  }
 }
 </script>
