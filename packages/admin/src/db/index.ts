@@ -1,4 +1,6 @@
 import { prop, getModelForClass } from '@typegoose/typegoose'
+import { Schema } from 'mongoose'
+import { Binary } from 'mongodb'
 
 import { IEntryFull } from '../api-def/entry'
 import { IMediaHeader } from '../api-def/media'
@@ -19,7 +21,7 @@ export class Media implements IMediaHeader {
   @prop() _id!: string
   @prop() name!: string
   @prop() type?: 'clipboard'
-  @prop() data!: ArrayBuffer
+  @prop({ type: Schema.Types.Mixed }) data!: Binary
 }
 
 export const MediaModel = getModelForClass(Media)

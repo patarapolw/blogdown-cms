@@ -1,3 +1,5 @@
+import path from 'path'
+
 import { Router } from 'express'
 import TypedRestRouter from '@typed-rest/express'
 import formidable from 'express-formidable'
@@ -5,13 +7,14 @@ import { String, Undefined } from 'runtypes'
 import fs from 'fs'
 import nanoid from 'nanoid'
 import dayjs from 'dayjs'
+import { Binary } from 'mongodb'
 
 import { IMediaApi } from '../api-def/media'
 import { MediaModel, Media } from '../db'
 
 export default (app: Router) => {
   app.use(formidable({
-    uploadDir: './upload',
+    uploadDir: path.join(__dirname, '../../upload'),
   }))
   const router = TypedRestRouter<IMediaApi>(app)
 
@@ -65,7 +68,7 @@ export default (app: Router) => {
       _id: name || nanoid(),
       name: name || dayjs().format('YYYY-MM-DD_HHMM_ss'),
       type,
-      data: fs.readFileSync(req.files!.file.path),
+      data: new Binary(fs.readFileSync(req.files!.file.path)),
     } as Media)
 
     return {
@@ -77,7 +80,7 @@ export default (app: Router) => {
     const r = await MediaModel.findById(req.params[0])
 
     if (r) {
-      res.send(r.data)
+      res.send(r.data.buffer)
     } else {
       res.sendStatus(404)
     }
