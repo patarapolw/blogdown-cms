@@ -101,7 +101,6 @@ export default class PostEdit extends Vue {
             const blob: File = item.getAsFile()
             const formData = new FormData()
             formData.append('file', blob)
-            formData.append('name', dayjs().format('YYYY-MM-DD_HHMM_ss'))
             formData.append('type', 'clipboard')
 
             api.request({
@@ -152,16 +151,20 @@ export default class PostEdit extends Vue {
     const id = normalizeArray(this.$route.query.id)
 
     if (id) {
-      const { header, excerpt, remaining, title, date, tag } = (await api.get('/api/posts/', {
+      const r = (await api.get('/api/posts/', {
         params: {
           id,
         },
       })).data
 
-      this.markdown = matter.stringify(`${excerpt}\n${remaining}`, header)
-      this.title = title
-      this.date = dayjs(date).toDate()
-      this.$set(this, 'tag', tag)
+      if (r) {
+        const { excerpt, remaining, header, title, date, tag } = r
+
+        this.markdown = matter.stringify(`${excerpt}\n${remaining}`, header)
+        this.title = title
+        this.date = dayjs(date).toDate()
+        this.$set(this, 'tag', tag)
+      }
     }
   }
 

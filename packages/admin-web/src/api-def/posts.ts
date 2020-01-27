@@ -11,9 +11,9 @@ export interface IPostsApi {
       query: {
         id: string
       }
-      response: IEntryFull & {
+      response: (IEntryFull & {
         id: string
-      }
+      }) | null
     }
     POST: {
       body: {

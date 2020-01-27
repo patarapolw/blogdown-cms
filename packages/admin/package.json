@@ -1,0 +1,29 @@
+{
+  "name": "@blogdown-cms/admin",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@typed-rest/express": "^0.1.2",
+    "@typegoose/typegoose": "^6.2.2",
+    "dayjs": "^1.8.19",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "express-formidable": "^1.2.0",
+    "mongoose": "^5.8.9",
+    "nanoid": "^2.1.10",
+    "runtypes": "^4.0.3"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.2",
+    "@types/express-formidable": "^1.0.4",
+    "@types/mongoose": "^5.5.43",
+    "@types/nanoid": "^2.1.0",
+    "cors": "^2.8.5",
+    "typescript": "^3.7.4"
+  }
+}

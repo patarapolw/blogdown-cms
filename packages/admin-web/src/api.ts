@@ -1,8 +1,8 @@
 import axios from '@typed-rest/axios'
 import { SnackbarProgrammatic as Snackbar } from 'buefy'
 
-import { IPostsApi } from './posts'
-import { IMediaApi } from './media'
+import { IPostsApi } from './api-def/posts'
+import { IMediaApi } from './api-def/media'
 
 const api = axios.create<IPostsApi & IMediaApi>({
   baseURL: `http://localhost:${process.env.VUE_APP_SERVER_PORT}`,
