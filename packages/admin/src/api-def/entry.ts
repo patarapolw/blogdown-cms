@@ -6,6 +6,7 @@ export interface IEntryHeader {
     [key: string]: any
   }
 }
+
 export type IEntryFull = IEntryHeader & {
   excerpt: string
   remaining: string

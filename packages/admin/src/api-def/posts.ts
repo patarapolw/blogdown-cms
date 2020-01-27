@@ -44,7 +44,9 @@ export interface IPostsApi {
   }
   '/api/posts/create': {
     PUT: {
-      body: IEntryFull
+      body: IEntryFull & {
+        slug?: string
+      }
       response: {
         id: string
       }

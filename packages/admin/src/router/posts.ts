@@ -1,9 +1,13 @@
 import { Router } from 'express'
 import TypedRestRouter from '@typed-rest/express'
 import { String, Array } from 'runtypes'
+import Slugify from 'seo-friendly-slugify'
+import nanoid from 'nanoid'
 
 import { IPostsApi } from '../api-def/posts'
 import { PostModel, Post } from '../db'
+
+const slugify = new Slugify()
 
 export default (app: Router) => {
   const router = TypedRestRouter<IPostsApi>(app)
@@ -12,7 +16,7 @@ export default (app: Router) => {
     const r = await PostModel.findOne({ _id: req.query.id })
     return r ? {
       ...r,
-      id: r.id!,
+      id: r._id,
       date: r.date.toISOString(),
     } : null
   })
@@ -48,7 +52,7 @@ export default (app: Router) => {
       data: (await r).map((el) => {
         return {
           ...el,
-          id: el.id!,
+          id: el._id,
           date: el.date.toISOString(),
         }
       }),
@@ -67,9 +71,13 @@ export default (app: Router) => {
   })
 
   router.put('/api/posts/create', async (req) => {
-    const { date, ...p } = req.body
+    const { date, slug, ...p } = req.body
     const { id } = await PostModel.create({
       ...p,
+      _id: slug || `${(() => {
+        const s = slugify.slugify(p.title)
+        return s ? `${s}-` : ''
+      })()}${nanoid(4)}`,
       date: new Date(String.check(date)),
     } as Post)
 

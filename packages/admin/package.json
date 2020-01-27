@@ -2,9 +2,12 @@
   "name": "@blogdown-cms/admin",
   "version": "1.0.0",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "license": "MIT",
   "private": true,
   "scripts": {
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev src/index.ts",
     "build": "tsc"
   },
   "dependencies": {
@@ -16,7 +19,8 @@
     "express-formidable": "^1.2.0",
     "mongoose": "^5.8.9",
     "nanoid": "^2.1.10",
-    "runtypes": "^4.0.3"
+    "runtypes": "^4.0.3",
+    "seo-friendly-slugify": "^1.0.4"
   },
   "devDependencies": {
     "@types/express": "^4.17.2",
@@ -24,6 +28,7 @@
     "@types/mongoose": "^5.5.43",
     "@types/nanoid": "^2.1.0",
     "cors": "^2.8.5",
+    "ts-node-dev": "^1.0.0-pre.44",
     "typescript": "^3.7.4"
   }
 }

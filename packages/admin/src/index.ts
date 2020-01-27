@@ -1,6 +1,7 @@
 import path from 'path'
 
 import express from 'express'
+import bodyParser from 'body-parser'
 import dotenv from 'dotenv'
 import mongoose from 'mongoose'
 
@@ -17,6 +18,8 @@ import MediaRouter from './router/media'
   try {
     app.use(require('cors')())
   } catch (e) {}
+
+  app.use(bodyParser.json())
 
   PostsRouter(app)
   MediaRouter(app)

@@ -17,7 +17,7 @@ import 'codemirror/addon/fold/indent-fold.js'
 import 'codemirror/addon/fold/comment-fold.js'
 import 'codemirror/addon/fold/markdown-fold.js'
 import 'codemirror/addon/fold/foldgutter.css'
-import 'codemirror/addon/scroll/scrollpastend.js'
+// import 'codemirror/addon/scroll/scrollpastend.js'
 import 'codemirror/theme/monokai.css'
 
 Vue.use(VueCodemirror, {
@@ -37,7 +37,7 @@ Vue.use(VueCodemirror, {
       },
     },
     foldGutter: true,
-    scrollPastEnd: true,
+    // scrollPastEnd: true,
     mode: {
       name: 'yaml-frontmatter',
       base: 'markdown',

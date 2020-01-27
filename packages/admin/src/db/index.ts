@@ -4,6 +4,7 @@ import { IEntryFull } from '../api-def/entry'
 import { IMediaHeader } from '../api-def/media'
 
 export class Post implements Omit<IEntryFull, 'date'> {
+  @prop() _id!: string
   @prop() date!: Date
   @prop() title!: string
   @prop() tag!: string[]
