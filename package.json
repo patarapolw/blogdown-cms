@@ -19,7 +19,9 @@
     "eslint-plugin-promise": ">=4.2.1",
     "eslint-plugin-standard": ">=4.0.0",
     "eslint-plugin-vue": "^6.0.1",
+    "jsdoc": "^3.6.3",
     "lerna": "^3.19.0",
+    "tsd-jsdoc": "^2.4.0",
     "typescript": "~3.5.3",
     "vue-eslint-parser": "^7.0.0"
   },
@@ -27,6 +29,7 @@
     "start": "blogdown ./user",
     "build": "lerna run build",
     "lerna:publish": "lerna publish",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "jsdoc": "jsdoc -t node_modules/tsd-jsdoc/dist -r node_modules/mongoose-gridfs"
   }
 }

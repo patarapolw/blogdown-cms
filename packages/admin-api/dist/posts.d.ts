@@ -1,4 +1,16 @@
-import { IEntryHeader, IEntryFull } from './entry'
+export interface IPostsHeader {
+  date: string
+  title: string
+  tag: string[]
+  header: {
+    [key: string]: any
+  }
+}
+
+export type IPostsFull = IPostsHeader & {
+  excerpt: string
+  remaining: string
+}
 
 interface ITagEdit {
   ids: string[]
@@ -11,7 +23,7 @@ export interface IPostsApi {
       query: {
         id: string
       }
-      response: (IEntryFull & {
+      response: (IPostsFull & {
         id: string
       }) | null
     }
@@ -25,14 +37,14 @@ export interface IPostsApi {
         count?: boolean
       }
       response: {
-        data: (Partial<IEntryHeader> & {
+        data: (Partial<IPostsFull> & {
           id: string
         })[]
         count?: number
       }
     }
     PUT: {
-      body: Partial<IEntryFull> & {
+      body: Partial<IPostsFull> & {
         id: string
       }
     }
@@ -44,7 +56,7 @@ export interface IPostsApi {
   }
   '/api/posts/create': {
     PUT: {
-      body: IEntryFull & {
+      body: IPostsFull & {
         slug?: string
       }
       response: {

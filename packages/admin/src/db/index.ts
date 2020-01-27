@@ -1,11 +1,10 @@
 import { prop, getModelForClass } from '@typegoose/typegoose'
-import { Schema } from 'mongoose'
-import { Binary } from 'mongodb'
+import { GridFSBucket, Db } from 'mongodb'
+import mongoose from 'mongoose'
 
-import { IEntryFull } from '../api-def/entry'
-import { IMediaHeader } from '../api-def/media'
+import { IPostsFull } from '@blogdown-cms/admin-api/dist/posts'
 
-export class Post implements Omit<IEntryFull, 'date'> {
+export class Post implements Omit<IPostsFull, 'date'> {
   @prop() _id!: string
   @prop() date!: Date
   @prop() title!: string
@@ -17,11 +16,6 @@ export class Post implements Omit<IEntryFull, 'date'> {
 
 export const PostModel = getModelForClass(Post)
 
-export class Media implements IMediaHeader {
-  @prop() _id!: string
-  @prop() name!: string
-  @prop() type?: 'clipboard'
-  @prop({ type: Schema.Types.Mixed }) data!: Binary
+export function getMediaBucket () {
+  return new GridFSBucket(mongoose.connection.db)
 }
-
-export const MediaModel = getModelForClass(Media)

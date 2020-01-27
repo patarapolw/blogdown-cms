@@ -1,7 +1,19 @@
-export interface IMediaHeader {
-  name: string
+export interface IFileSchema<T = any> {
+  length: number;
+  chunckSize: number;
+  uploadDate: Date;
+  md5: string;
+  filename: string;
+  contentType: string;
+  aliases: string[];
+  metadata: T;
+}
+
+export interface IMediaMetadata {
   type?: 'clipboard'
 }
+
+export type IMediaFull = IFileSchema<IMediaMetadata>
 
 export interface IMediaApi {
   '/media/': {
@@ -15,8 +27,8 @@ export interface IMediaApi {
         count?: boolean
       }
       response: {
-        data: (Partial<IMediaHeader> & {
-          id: string
+        data: (IMediaFull & {
+          name: string
         })[]
         count?: number
       }
@@ -30,12 +42,12 @@ export interface IMediaApi {
         file: File
       }
       response: {
-        id: string
+        name: string
       }
     }
     DELETE: {
       query: {
-        id: string
+        name: string
       }
     }
   }

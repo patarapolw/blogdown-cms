@@ -1,0 +1,11 @@
+{
+  "name": "@blogdown-cms/admin-api",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "@types/mongodb": "^3.3.14"
+  }
+}

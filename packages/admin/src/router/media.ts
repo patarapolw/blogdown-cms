@@ -7,12 +7,14 @@ import { String, Undefined } from 'runtypes'
 import fs from 'fs'
 import nanoid from 'nanoid'
 import dayjs from 'dayjs'
-import { Binary } from 'mongodb'
 
-import { IMediaApi } from '../api-def/media'
-import { MediaModel, Media } from '../db'
+import { IMediaApi } from '@blogdown-cms/admin-api/dist/media'
+
+import { getMediaBucket } from '../db'
 
 export default (app: Router) => {
+  const mediaBucket = getMediaBucket()
+
   app.use(formidable({
     uploadDir: path.join(__dirname, '../../upload'),
   }))
@@ -21,10 +23,10 @@ export default (app: Router) => {
   router.post('/media/', async (req) => {
     const { q, offset, limit, sort, projection, count } = req.body
 
-    let r = MediaModel.find(q)
+    let r = mediaBucket.find(q)
 
     if (projection) {
-      r = r.select(projection)
+      r = r.project(projection)
     }
 
     if (sort) {
@@ -42,11 +44,11 @@ export default (app: Router) => {
     let rCount: number | undefined
 
     if (count) {
-      rCount = await MediaModel.find(q).count()
+      rCount = await mediaBucket.find(q).count()
     }
 
     return {
-      data: (await r).map((el) => {
+      data: (await r.toArray()).map((el) => {
         return {
           ...el,
           id: el.id!,
@@ -61,28 +63,43 @@ export default (app: Router) => {
     const type = String.Or(Undefined).check(req.fields!.type)
 
     if (type === 'clipboard') {
-      name = dayjs().format('YYYY-MM-DD_HHMM_ss')
+      name = `${dayjs().format('YYYY-MM-DD_HHMM_ss')}.png`
+    } else {
+      name = name ? (() => {
+        const [filename, ext] = name.split(/\.([a-z]+)$/i)
+        return `${filename}-${nanoid(4)}.${ext || 'png'}`
+      })() : `${nanoid()}.png`
     }
 
-    const { id } = await MediaModel.create({
-      _id: name || nanoid(),
-      name: name || dayjs().format('YYYY-MM-DD_HHMM_ss'),
-      type,
-      data: new Binary(fs.readFileSync(req.files!.file.path)),
-    } as Media)
+    await new Promise((resolve, reject) => {
+      fs.createReadStream(req.files!.file.path)
+        .pipe(mediaBucket.openUploadStream(name!, {
+          metadata: {
+            type,
+          },
+        }))
+        .on('error', reject)
+        .on('finish', resolve)
+    })
 
     return {
-      id,
+      name,
     }
   })
 
   router.get('/media/*', async (req, res) => {
-    const r = await MediaModel.findById(req.params[0])
-
-    if (r) {
-      res.send(r.data.buffer)
-    } else {
-      res.sendStatus(404)
-    }
+    console.log(req.params[0])
+    await new Promise((resolve) => {
+      mediaBucket.openDownloadStreamByName(req.params[0])
+        .on('error', (e) => {
+          console.error(e)
+          res.sendStatus(404)
+        })
+        .on('end', () => {
+          res.end()
+          resolve()
+        })
+        .pipe(res)
+    })
   })
 }

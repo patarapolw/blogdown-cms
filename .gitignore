@@ -1,3 +1,4 @@
 node_modules
 dist
 /user/
+yarn-error.log

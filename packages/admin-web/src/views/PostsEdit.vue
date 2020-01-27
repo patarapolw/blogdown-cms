@@ -119,7 +119,7 @@ export default class PostEdit extends Vue {
               method: 'PUT',
               data: formData,
             }).then((r) => {
-              ins.getDoc().replaceRange(`![${blob.name}](/media/${r.data.id})`, ins.getCursor())
+              ins.getDoc().replaceRange(`![${blob.name}](/media/${r.data.name})`, ins.getCursor())
             })
           }
         }
@@ -187,7 +187,7 @@ export default class PostEdit extends Vue {
 
     const id = normalizeArray(this.$route.query.id)
     const { data: header, content } = matter(this.markdown)
-    const [excerpt, remaining] = content.split(process.env.VUE_APP_MATTER_EXCERPT_SEPARATOR)
+    const [excerpt, remaining] = content.split(process.env.VUE_APP_MATTER_EXCERPT_SEPARATOR!)
 
     if (!id) {
       const r = await api.put('/api/posts/create', {
