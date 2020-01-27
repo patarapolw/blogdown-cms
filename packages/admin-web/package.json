@@ -11,6 +11,7 @@
     "@fortawesome/free-brands-svg-icons": "^5.12.0",
     "@fortawesome/free-solid-svg-icons": "^5.12.0",
     "@fortawesome/vue-fontawesome": "^0.1.9",
+    "@typed-rest/axios": "^0.1.2",
     "@types/codemirror": "^0.0.83",
     "@types/hyperscript": "^0.0.3",
     "@types/nanoid": "^2.1.0",
