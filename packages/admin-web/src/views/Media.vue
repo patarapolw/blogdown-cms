@@ -10,18 +10,15 @@
             button.button(:disabled="selected.length === 0" slot="trigger")
               span(style="margin-right: 0.5em") Batch Edit
               b-icon(icon="angle-down")
-            b-dropdown-item(aria-role="listitem" has-link)
-              button Delete
+            b-dropdown-item(aria-role="listitem")
+              p(role="button" @click="doDelete") Delete
   .columns
     .column
       b-table(
         :data="items"
-        :columns="headers"
         checkable
         :checked-rows.sync="selected"
         :loading="isLoading"
-        detailed
-        show-detail-icon
 
         paginated
         backend-pagination
@@ -33,12 +30,13 @@
         :default-sort="['date', 'desc']"
         @sort="onSort"
       )
-        template(slot="detail" slot-scope="props")
-          .content(
-            v-html="preview(props.row.teaser)"
-            style="max-height: 300px; overflow: scroll"
-            @click="onRowClicked(props.row.id)"
-          )
+        template(slot-scope="props")
+          b-table-column(v-for="h in headers" :key="h.field"
+              :label="h.label" :width="h.width" :sortable="h.sortable")
+            img(v-if="h.field === 'preview'"
+              :alt="props.row.filename" :src="'/media/' + props.row.filename")
+            span(v-else-if="h.field === 'type'") {{props.row.metadata.type}}
+            span(v-else) {{props.row[h.field]}}
   b-modal(:active.sync="isAddMedia" :width="500")
     .card
       header.card-header
@@ -60,15 +58,19 @@
 
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator'
+import dayjs from 'dayjs'
+
+import api from '../api'
+import { normalizeArray } from '../utils'
 
 @Component
 export default class Posts extends Vue {
   selected: any[] = []
   headers = [
-    { label: 'id', field: 'id', width: 150 },
-    { label: 'Name', field: 'name', width: 250, sortable: true },
+    { label: 'Filename', field: 'filename', width: 250, sortable: true },
+    { label: 'Type', field: 'type', width: 100, sortable: true },
     { label: 'Preview', field: 'preview', sortable: true },
-    { label: 'Date', field: 'date', width: 200, sortable: true },
+    { label: 'Upload Date', field: 'uploadDate', width: 300, sortable: true },
   ]
 
   items: any[] = []
@@ -78,8 +80,27 @@ export default class Posts extends Vue {
   isAddMedia = false
   newFiles: File[] = []
 
-  load () {
+  get page () {
+    return parseInt(normalizeArray(this.$route.query.page) || '1')
+  }
 
+  mounted () {
+    this.load()
+  }
+
+  @Watch('$route.query.page')
+  async load () {
+    const r = await api.post('/media/', {
+      offset: (this.page - 1) * 5,
+      limit: 5,
+    })
+
+    this.$set(this, 'items', r.data.data.map((el) => {
+      return {
+        ...el,
+        uploadDate: dayjs(el.uploadDate).format('YYYY-MM-DD HH:MM Z'),
+      }
+    }))
   }
 
   addMedia () {
@@ -95,6 +116,40 @@ export default class Posts extends Vue {
 
   onRemoveMedia (f0: File) {
     this.$set(this, 'newFiles', this.newFiles.filter((f) => f !== f0))
+  }
+
+  onPageChanged (p: number) {
+    this.$router.push({
+      query: {
+        ...this.$route.query,
+        page: p.toString(),
+      },
+    })
+  }
+
+  onSort (...p: any[]) {
+    console.log(p)
+  }
+
+  async doDelete () {
+    this.$buefy.dialog.confirm({
+      title: 'Deleting media',
+      message: 'Are you sure you want to <b>delete</b> the selected media?',
+      confirmText: 'Delete',
+      type: 'is-danger',
+      hasIcon: true,
+      onConfirm: async () => {
+        await api.delete('/media/', {
+          data: {
+            q: {
+              filename: { $in: this.selected.map((el) => el.filename) },
+            },
+          },
+        })
+
+        this.load()
+      },
+    })
   }
 }
 </script>

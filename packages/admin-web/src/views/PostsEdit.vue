@@ -119,7 +119,7 @@ export default class PostEdit extends Vue {
               method: 'PUT',
               data: formData,
             }).then((r) => {
-              ins.getDoc().replaceRange(`![${blob.name}](/media/${r.data.name})`, ins.getCursor())
+              ins.getDoc().replaceRange(`![${r.data.name}](/media/${r.data.name})`, ins.getCursor())
             })
           }
         }

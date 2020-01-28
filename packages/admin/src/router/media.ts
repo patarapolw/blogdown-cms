@@ -15,9 +15,10 @@ import { getMediaBucket } from '../db'
 export default (app: Router) => {
   const mediaBucket = getMediaBucket()
 
-  app.use(formidable({
+  app.put('/media/', formidable({
     uploadDir: path.join(__dirname, '../../upload'),
   }))
+
   const router = TypedRestRouter<IMediaApi>(app)
 
   router.post('/media/', async (req) => {
@@ -87,10 +88,40 @@ export default (app: Router) => {
     }
   })
 
-  router.get('/media/*', async (req, res) => {
-    console.log(req.params[0])
+  router.delete('/media/', async (req, res) => {
+    let q: any = null
+
+    if (req.query.filename) {
+      q = {
+        filename: req.query.filename,
+      }
+    } else if (req.body && req.body.q) {
+      q = req.body.q
+    }
+
+    let modified = false
+
+    if (q) {
+      const ids = (await mediaBucket.find(q).project({ _id: 1 }).toArray()).map((el) => el._id)
+
+      if (ids.length > 0) {
+        await Promise.all(ids.map((id) => new Promise((resolve, reject) => {
+          mediaBucket.delete(id, (err) => err ? reject(err) : resolve())
+        })))
+
+        res.sendStatus(201)
+        modified = true
+      }
+    }
+
+    if (!modified) {
+      res.sendStatus(304)
+    }
+  })
+
+  router.get('/media/:filename', async (req, res) => {
     await new Promise((resolve) => {
-      mediaBucket.openDownloadStreamByName(req.params[0])
+      mediaBucket.openDownloadStreamByName(req.params.filename)
         .on('error', (e) => {
           console.error(e)
           res.sendStatus(404)

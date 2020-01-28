@@ -20,6 +20,7 @@
     "express-formidable": "^1.2.0",
     "mongoose": "^5.8.9",
     "nanoid": "^2.1.10",
+    "rimraf": "^3.0.1",
     "runtypes": "^4.0.3",
     "seo-friendly-slugify": "^1.0.5"
   },
@@ -28,6 +29,7 @@
     "@types/express-formidable": "^1.0.4",
     "@types/mongoose": "^5.5.43",
     "@types/nanoid": "^2.1.0",
+    "@types/rimraf": "^2.0.3",
     "cors": "^2.8.5",
     "ts-node-dev": "^1.0.0-pre.44",
     "typescript": "^3.7.4"

@@ -47,13 +47,18 @@ export interface IMediaApi {
     }
     DELETE: {
       query: {
-        name: string
+        filename?: string
+      }
+      body?: {
+        q: any
       }
     }
   }
-  '/media/*': {
+  '/media/:filename': {
     GET: {
-      params: [string]
+      params: {
+        filename: string
+      }
     }
   }
 }

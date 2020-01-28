@@ -23,7 +23,7 @@ const router = new VueRouter({
       component: () => import(/* webpackChunkName: "Comments" */ '../views/Comments.vue'),
     },
     {
-      path: '/media',
+      path: '/media-viewer',
       component: () => import(/* webpackChunkName: "Media" */ '../views/Media.vue'),
     },
   ],

@@ -4,6 +4,7 @@ import express from 'express'
 import bodyParser from 'body-parser'
 import dotenv from 'dotenv'
 import mongoose from 'mongoose'
+import rimraf from 'rimraf'
 
 import PostsRouter from './router/posts'
 import MediaRouter from './router/media'
@@ -15,9 +16,9 @@ import MediaRouter from './router/media'
   const app = express()
   const port = process.env.PORT || '48000'
 
-  try {
+  if (process.env.NODE_ENV === 'development') {
     app.use(require('cors')())
-  } catch (e) {}
+  }
 
   app.use(bodyParser.json())
 
@@ -26,7 +27,14 @@ import MediaRouter from './router/media'
 
   app.use(express.static(path.join(__dirname, '../web')))
 
-  app.listen(port, () => {
+  const server = app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`)
+  });
+
+  ['exit', 'SIGINT', 'uncaughtException', 'SIGTERM'].forEach((eventType) => {
+    process.on(eventType as any, () => {
+      server.close()
+      rimraf.sync(path.join(__dirname, '../upload/upload_*'))
+    })
   })
 })().catch(console.error)

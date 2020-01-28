@@ -7,10 +7,10 @@ module.exports = {
   outputDir: '../admin/web',
   devServer: {
     proxy: {
-      '^/api': {
+      '^/api/': {
         target: `http://localhost:${serverPort}`,
       },
-      '^/media': {
+      '^/media/': {
         target: `http://localhost:${serverPort}`,
       },
     },
