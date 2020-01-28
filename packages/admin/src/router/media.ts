@@ -14,14 +14,9 @@ import { getMediaBucket } from '../db'
 
 export default (app: Router) => {
   const mediaBucket = getMediaBucket()
-
-  app.put('/media/', formidable({
-    uploadDir: path.join(__dirname, '../../upload'),
-  }))
-
   const router = TypedRestRouter<IMediaApi>(app)
 
-  router.post('/media/', async (req) => {
+  router.post('/api/media/', async (req) => {
     const { q, offset, limit, sort, projection, count } = req.body
 
     let r = mediaBucket.find(q)
@@ -59,12 +54,16 @@ export default (app: Router) => {
     }
   })
 
-  router.put('/media/', async (req) => {
-    let name = String.Or(Undefined).check(req.fields!.name)
+  app.put('/api/media/', formidable({
+    uploadDir: path.join(__dirname, '../../upload'),
+  }))
+
+  router.put('/api/media/', async (req) => {
+    let name = req.files!.file.name || String.Or(Undefined).check(req.fields!.name)
     const type = String.Or(Undefined).check(req.fields!.type)
 
     if (type === 'clipboard') {
-      name = `${dayjs().format('YYYY-MM-DD_HHMM_ss')}.png`
+      name = `${dayjs().format('YYYY-MM-DD_HHmmss')}.png`
     } else {
       name = name ? (() => {
         const [filename, ext] = name.split(/\.([a-z]+)$/i)
@@ -88,7 +87,7 @@ export default (app: Router) => {
     }
   })
 
-  router.delete('/media/', async (req, res) => {
+  router.delete('/api/media/', async (req, res) => {
     let q: any = null
 
     if (req.query.filename) {
@@ -119,7 +118,7 @@ export default (app: Router) => {
     }
   })
 
-  router.get('/media/:filename', async (req, res) => {
+  router.get('/api/media/:filename', async (req, res) => {
     await new Promise((resolve) => {
       mediaBucket.openDownloadStreamByName(req.params.filename)
         .on('error', (e) => {

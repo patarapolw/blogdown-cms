@@ -5,6 +5,7 @@ import bodyParser from 'body-parser'
 import dotenv from 'dotenv'
 import mongoose from 'mongoose'
 import rimraf from 'rimraf'
+import rewrite from 'connect-modrewrite'
 
 import PostsRouter from './router/posts'
 import MediaRouter from './router/media'
@@ -20,7 +21,11 @@ import MediaRouter from './router/media'
     app.use(require('cors')())
   }
 
-  app.use(bodyParser.json())
+  app.use(rewrite([
+    '^/media/(.+)$ /api/media/$1',
+    '^/(?!api) / [L]',
+  ]))
+  app.use('/api', bodyParser.json())
 
   PostsRouter(app)
   MediaRouter(app)
@@ -31,7 +36,7 @@ import MediaRouter from './router/media'
     console.log(`Server is running on http://localhost:${port}`)
   });
 
-  ['exit', 'SIGINT', 'uncaughtException', 'SIGTERM'].forEach((eventType) => {
+  ['exit', 'SIGINT', 'SIGUSR1', 'SIGUSR2', 'uncaughtException', 'SIGTERM'].forEach((eventType) => {
     process.on(eventType as any, () => {
       server.close()
       rimraf.sync(path.join(__dirname, '../upload/upload_*'))

@@ -10,6 +10,8 @@ export default class MakeHtml {
   md = new showdown.Converter()
   hp: HyperPug
 
+  html = ''
+
   constructor (public id = nanoid()) {
     this.md.addExtension({
       type: 'lang',
@@ -17,7 +19,7 @@ export default class MakeHtml {
       replace: (_: string, p1: string) => {
         return this.pugConvert(p1)
       },
-    })
+    }, 'pug')
 
     this.md.addExtension({
       type: 'lang',
@@ -25,7 +27,15 @@ export default class MakeHtml {
       replace: (_: string, p1: string) => {
         return this.makeCss(p1)
       },
-    })
+    }, 'css')
+
+    this.md.addExtension({
+      type: 'lang',
+      regex: /!\[([^\]]*)\]\(([^)/]+)\)/g,
+      replace: (_: string, p1: string, p2: string) => {
+        return `![${p1}](${`/api/media/${p2}`})`
+      },
+    }, 'local-image')
 
     this.hp = new HyperPug({
       markdown: (s) => this.mdConvert(s),
@@ -34,7 +44,9 @@ export default class MakeHtml {
   }
 
   parse (s: string) {
-    const html = this.mdConvert(matter(s).content)
+    try {
+      this.html = this.mdConvert(matter(s).content)
+    } catch (e) {}
 
     setTimeout(() => {
       const el = document.getElementById(this.id)
@@ -49,10 +61,12 @@ export default class MakeHtml {
       }
     }, 100)
 
-    return h('div', {
+    const output = h('div', {
       id: this.id,
-      innerHTML: html,
+      innerHTML: this.html,
     }).outerHTML
+
+    return output
   }
 
   pugConvert (s: string) {

@@ -4,7 +4,7 @@ import { String, Array } from 'runtypes'
 import Slugify from 'seo-friendly-slugify'
 import nanoid from 'nanoid'
 
-import { IPostsApi } from '../api-def/posts'
+import { IPostsApi } from '@blogdown-cms/admin-api/dist/posts'
 import { PostModel, Post } from '../db'
 
 const slugify = new Slugify()
@@ -14,11 +14,15 @@ export default (app: Router) => {
 
   router.get('/api/posts/', async (req) => {
     const r = await PostModel.findOne({ _id: req.query.id })
-    return r ? {
-      ...r,
-      id: r._id,
-      date: r.date.toISOString(),
-    } : null
+    if (r) {
+      return {
+        ...r.toJSON(),
+        id: r._id,
+        date: r.date.toISOString(),
+      }
+    }
+
+    return null
   })
 
   router.post('/api/posts/', async (req) => {
@@ -50,10 +54,12 @@ export default (app: Router) => {
 
     return {
       data: (await r).map((el) => {
+        const date = el.date
+
         return {
-          ...el,
+          ...el.toJSON(),
           id: el._id,
-          date: el.date.toISOString(),
+          date: date ? date.toISOString() : undefined,
         }
       }),
       count: rCount,
@@ -85,9 +91,29 @@ export default (app: Router) => {
   })
 
   router.delete('/api/posts/', async (req, res) => {
-    const { id } = req.query
-    await PostModel.deleteOne({
-      _id: String.check(id),
+    let isDeleted = false
+
+    if (req.query.id) {
+      const r = await PostModel.deleteOne({
+        _id: req.query.id,
+      })
+      isDeleted = (!!r.deletedCount && r.deletedCount > 0)
+    } else if (req.body && req.body.q) {
+      const r = await PostModel.deleteMany(req.body.q)
+      isDeleted = (!!r.deletedCount && r.deletedCount > 0)
+    }
+
+    res.sendStatus(
+      isDeleted ? 201 : 304,
+    )
+  })
+
+  router.post('/api/posts/tag', async (req, res) => {
+    const { ids, tags } = req.body
+    await PostModel.updateMany({
+      _id: { $in: Array(String).check(ids) },
+    }, {
+      $set: { tag: Array(String).check(tags) },
     })
 
     res.sendStatus(201)

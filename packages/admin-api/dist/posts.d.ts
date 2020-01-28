@@ -50,7 +50,10 @@ export interface IPostsApi {
     }
     DELETE: {
       query: {
-        id: string
+        id?: string
+      }
+      body?: {
+        q?: any
       }
     }
   }
@@ -65,6 +68,9 @@ export interface IPostsApi {
     }
   }
   '/api/posts/tag': {
+    POST: {
+      body: ITagEdit
+    }
     PUT: {
       body: ITagEdit
     }

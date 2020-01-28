@@ -14,6 +14,7 @@
     "@blogdown-cms/admin-api": "*",
     "@typed-rest/express": "^0.1.2",
     "@typegoose/typegoose": "^6.2.2",
+    "connect-modrewrite": "^0.10.2",
     "dayjs": "^1.8.19",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",

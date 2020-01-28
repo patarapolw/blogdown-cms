@@ -10,9 +10,6 @@ module.exports = {
       '^/api/': {
         target: `http://localhost:${serverPort}`,
       },
-      '^/media/': {
-        target: `http://localhost:${serverPort}`,
-      },
     },
   },
 }

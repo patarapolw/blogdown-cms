@@ -2,7 +2,7 @@
 .container
   .columns(style="margin-top: 1em; min-height: 90vh;")
     .column
-      b-collapse.card(aria-id="header" style="margin-bottom: 1em;")
+      b-collapse.card(:open.sync="isShowHeader" aria-id="header" style="margin-bottom: 1em;")
         .card-header(slot="trigger" slot-scope="props" role="button" aria-controls="header" style="align-items: center;")
           p.card-header-title
             span(v-if="title") {{title}}
@@ -40,7 +40,15 @@
       codemirror(v-model="markdown" ref="codemirror" @input="onCmCodeChange")
     .column
       .card(style="min-height: 100%;")
-        .card-content.content(v-html="html")
+        .card-content
+          h1.title {{title}}
+          .content(v-html="excerptHtml")
+          b-collapse(v-if="remainingHtml" :open="isShowRemaining" position="is-bottom" aria-id="show-remaining")
+            a(slot="trigger" slot-scope="props" aria-controls="show-remaining")
+              b-icon(:icon="!props.open ? 'angle-down' : 'angle-up'")
+              span {{ !props.open ? 'Show more' : 'Show less' }}
+            hr
+            .content(v-html="remainingHtml")
 </template>
 
 <script lang="ts">
@@ -69,16 +77,17 @@ export default class PostEdit extends Vue {
     tag?: string[]
   }[] | null = null
 
+  excerptHtml = ''
+  remainingHtml = ''
+  isShowRemaining = true
+  isShowHeader = true
+
   isEdited = false
 
   readonly noTitle = 'Title must not be empty'
 
   makeHtml = new MakeHtml()
   slugify = new Slugify()
-
-  get html () {
-    return this.makeHtml.parse(this.markdown)
-  }
 
   get codemirror (): CodeMirror.Editor {
     return (this.$refs.codemirror as any).codemirror
@@ -115,11 +124,11 @@ export default class PostEdit extends Vue {
             formData.append('type', 'clipboard')
 
             api.request({
-              url: '/media/',
+              url: '/api/media/',
               method: 'PUT',
               data: formData,
             }).then((r) => {
-              ins.getDoc().replaceRange(`![${r.data.name}](/media/${r.data.name})`, ins.getCursor())
+              ins.getDoc().replaceRange(`![${r.data.name}](${r.data.name})`, ins.getCursor())
             })
           }
         }
@@ -137,8 +146,12 @@ export default class PostEdit extends Vue {
     }
   }
 
+  beforeDestroy () {
+    window.onbeforeunload = null
+  }
+
   formatDate (d: Date) {
-    return dayjs(d).format('YYYY-MM-DD HH:MM Z')
+    return dayjs(d).format('YYYY-MM-DD HH:mm Z')
   }
 
   async getFilteredTags (s: string) {
@@ -170,10 +183,11 @@ export default class PostEdit extends Vue {
       })).data
 
       if (r) {
-        const { excerpt, remaining, header, title, date, tag } = r
+        const { excerpt, remaining, header, title, date, tag, id } = r
 
-        this.markdown = matter.stringify(`${excerpt}\n${remaining}`, header)
+        this.markdown = matter.stringify(`${excerpt}${process.env.VUE_APP_MATTER_EXCERPT_SEPARATOR}${remaining}`, header)
         this.title = title
+        this.slug = id
         this.date = dayjs(date).toDate()
         this.$set(this, 'tag', tag)
       }
@@ -186,8 +200,8 @@ export default class PostEdit extends Vue {
     }
 
     const id = normalizeArray(this.$route.query.id)
-    const { data: header, content } = matter(this.markdown)
-    const [excerpt, remaining] = content.split(process.env.VUE_APP_MATTER_EXCERPT_SEPARATOR!)
+    const { data: header = {}, content } = matter(this.markdown)
+    const [excerpt, remaining = ''] = content.split(process.env.VUE_APP_MATTER_EXCERPT_SEPARATOR!)
 
     if (!id) {
       const r = await api.put('/api/posts/create', {
@@ -195,8 +209,8 @@ export default class PostEdit extends Vue {
         title: this.title,
         date: this.date.toISOString(),
         slug: this.slug,
-        excerpt,
-        remaining,
+        excerpt: excerpt,
+        remaining: remaining,
         header,
       })
 
@@ -223,6 +237,13 @@ export default class PostEdit extends Vue {
 
   onCmCodeChange (newCode: string) {
     this.isEdited = true
+    this.isShowRemaining = true
+    this.isShowHeader = false
+
+    const [excerpt, remaining = ''] = newCode.split(process.env.VUE_APP_MATTER_EXCERPT_SEPARATOR!)
+
+    this.excerptHtml = this.makeHtml.parse(excerpt)
+    this.remainingHtml = remaining.trim() ? this.makeHtml.parse(remaining) : ''
   }
 
   generateSlug () {

@@ -16,7 +16,7 @@ export interface IMediaMetadata {
 export type IMediaFull = IFileSchema<IMediaMetadata>
 
 export interface IMediaApi {
-  '/media/': {
+  '/api/media/': {
     POST: {
       body: {
         q?: Record<string, any>
@@ -54,7 +54,15 @@ export interface IMediaApi {
       }
     }
   }
-  '/media/:filename': {
+  '/api/media/edit': {
+    PUT: {
+      body: {
+        q: any
+        set: any
+      }
+    }
+  }
+  '/api/media/:filename': {
     GET: {
       params: {
         filename: string

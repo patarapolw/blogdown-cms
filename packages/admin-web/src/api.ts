@@ -11,8 +11,7 @@ const api = axios.create<IPostsApi & IMediaApi>({
 })
 
 api.interceptors.response.use(undefined, (err) => {
-  console.error(err)
-  Snackbar.open(err)
+  Snackbar.open(err.message)
   return err
 })
 

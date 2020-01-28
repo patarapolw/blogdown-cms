@@ -6,8 +6,9 @@
         .buttons
           button.button(@click="isAddMedia = true") Upload
           button.button(@click="load") Reload
-          b-dropdown(aria-role="list" position="is-bottom-left")
-            button.button(:disabled="selected.length === 0" slot="trigger")
+          button.button(:disabled="selected.length !== 1" @click="rename") Rename
+          b-dropdown(aria-role="list" position="is-bottom-left" :disabled="selected.length === 0")
+            button.button(slot="trigger")
               span(style="margin-right: 0.5em") Batch Edit
               b-icon(icon="angle-down")
             b-dropdown-item(aria-role="listitem")
@@ -27,14 +28,14 @@
         @page-change="onPageChanged"
 
         backend-sorting
-        :default-sort="['date', 'desc']"
+        :default-sort="[sort.key, sort.type]"
         @sort="onSort"
       )
         template(slot-scope="props")
           b-table-column(v-for="h in headers" :key="h.field"
               :label="h.label" :width="h.width" :sortable="h.sortable")
             img(v-if="h.field === 'preview'"
-              :alt="props.row.filename" :src="'/media/' + props.row.filename")
+              :alt="props.row.filename" :src="'/api/media/' + props.row.filename")
             span(v-else-if="h.field === 'type'") {{props.row.metadata.type}}
             span(v-else) {{props.row[h.field]}}
   b-modal(:active.sync="isAddMedia" :width="500")
@@ -43,7 +44,7 @@
         .card-header-title Upload Media
       .card-content
         b-field(style="text-align: center;")
-          b-upload(v-model="newFiles" multiple drag-drop @input="")
+          b-upload(v-model="newFiles" multiple drag-drop accept="image/*")
             section.section
               .has-text-centered
                 b-icon(icon="upload" size="is-large")
@@ -73,12 +74,19 @@ export default class Posts extends Vue {
     { label: 'Upload Date', field: 'uploadDate', width: 300, sortable: true },
   ]
 
+  sort = {
+    key: 'uploadDate',
+    type: 'desc',
+  }
+
   items: any[] = []
 
   isLoading = false
   count = 0
   isAddMedia = false
   newFiles: File[] = []
+
+  perPage = 5
 
   get page () {
     return parseInt(normalizeArray(this.$route.query.page) || '1')
@@ -90,21 +98,36 @@ export default class Posts extends Vue {
 
   @Watch('$route.query.page')
   async load () {
-    const r = await api.post('/media/', {
-      offset: (this.page - 1) * 5,
-      limit: 5,
+    const r = await api.post('/api/media/', {
+      offset: (this.page - 1) * this.perPage,
+      limit: this.perPage,
+      sort: {
+        [this.sort.key]: this.sort.type === 'desc' ? -1 : 1,
+      },
     })
 
     this.$set(this, 'items', r.data.data.map((el) => {
       return {
         ...el,
-        uploadDate: dayjs(el.uploadDate).format('YYYY-MM-DD HH:MM Z'),
+        uploadDate: dayjs(el.uploadDate).format('YYYY-MM-DD HH:mm:ss Z'),
       }
     }))
   }
 
-  addMedia () {
+  async addMedia () {
+    await Promise.all(this.newFiles.map(async (f) => {
+      const formData = new FormData()
+      formData.append('file', f)
+
+      await api.request({
+        url: '/api/media/',
+        method: 'PUT',
+        data: formData,
+      })
+    }))
+
     this.isAddMedia = false
+    this.load()
   }
 
   @Watch('isAddMedia')
@@ -127,8 +150,10 @@ export default class Posts extends Vue {
     })
   }
 
-  onSort (...p: any[]) {
-    console.log(p)
+  onSort (key: string, type: 'desc' | 'asc') {
+    this.sort.key = key
+    this.sort.type = (type as string)
+    this.load()
   }
 
   async doDelete () {
@@ -139,7 +164,7 @@ export default class Posts extends Vue {
       type: 'is-danger',
       hasIcon: true,
       onConfirm: async () => {
-        await api.delete('/media/', {
+        await api.delete('/api/media/', {
           data: {
             q: {
               filename: { $in: this.selected.map((el) => el.filename) },
@@ -150,6 +175,14 @@ export default class Posts extends Vue {
         this.load()
       },
     })
+  }
+
+  async rename () {
+    const el = this.selected[0]
+
+    if (el) {
+      api.put('/api/media/edit')
+    }
   }
 }
 </script>
