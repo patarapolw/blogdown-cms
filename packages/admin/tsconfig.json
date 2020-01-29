@@ -8,6 +8,7 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "resolveJsonModule": true
   }
 }

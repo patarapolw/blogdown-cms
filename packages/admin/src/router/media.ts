@@ -7,13 +7,25 @@ import { String } from 'runtypes'
 import nanoid from 'nanoid'
 import dayjs from 'dayjs'
 import fileUpload from 'express-fileupload'
+import cloudinary from 'cloudinary'
 
 import { IMediaApi } from '@blogdown-cms/admin-api'
 import { MediaModel, Media } from '../db'
+import { config } from '../config'
 
-const ROOT = path.resolve(__dirname, '../../public/media')
+const ROOT = path.resolve(__dirname, '../../../../user/media')
 
 export default (app: Router) => {
+  const { apiKey, apiSecret: cloudinarySecret, cloudName, prefix: cloudinaryPrefix = '' } = config.cloudinary
+
+  if (config.cloudinary.apiSecret) {
+    cloudinary.v2.config({
+      api_key: apiKey,
+      api_secret: cloudinarySecret,
+      cloud_name: cloudName,
+    })
+  }
+
   const router = TypedRestRouter<IMediaApi>(app)
 
   router.post('/api/media', async (req) => {
@@ -60,6 +72,13 @@ export default (app: Router) => {
 
     if (update.filename) {
       fs.renameSync(path.join(ROOT, filename), path.join(ROOT, update.filename))
+
+      if (cloudinarySecret) {
+        await cloudinary.v2.uploader.rename(
+          `${cloudinaryPrefix}${filename}`,
+          `${cloudinaryPrefix}${update.filename}`,
+        )
+      }
     }
 
     res.sendStatus(201)
@@ -82,9 +101,19 @@ export default (app: Router) => {
       const files = (await MediaModel.find(q).select({ filename: 1 })).map((el) => el.filename)
 
       if (files.length > 0) {
-        files.map((f) => {
-          fs.unlinkSync(path.join(ROOT, f))
-        })
+        await Promise.all(files.map(async (f) => {
+          try {
+            if (fs.existsSync(path.join(ROOT, f))) {
+              fs.unlinkSync(path.join(ROOT, f))
+            }
+
+            if (cloudinarySecret) {
+              await cloudinary.v2.uploader.destroy(`${cloudinaryPrefix}${f}`)
+            }
+          } catch (e) {
+            console.error(e)
+          }
+        }))
 
         await MediaModel.deleteMany(q)
 
@@ -100,22 +129,28 @@ export default (app: Router) => {
 
   app.post('/api/media/create', fileUpload())
 
-  router.post('/api/media/create', async (req, res) => {
+  router.post('/api/media/create', async (req) => {
     const f = normalizeArray(req.files!.file)!
     let name = f.name
 
     if (name === 'image.png') {
       name = `${dayjs().format('YYYY-MM-DD_HHmmss')}.png`
     } else {
-      name = name ? (() => {
+      name = (() => {
         const [filename, ext] = name.split(/\.([a-z]+)$/i)
         return `${filename}-${nanoid(4)}.${ext || 'png'}`
-      })() : `${nanoid()}.png`
+      })()
     }
 
     await new Promise((resolve, reject) => {
       f.mv(path.join(ROOT, name), (err) => err ? reject(err) : resolve())
     })
+
+    if (cloudinarySecret) {
+      await cloudinary.v2.uploader.upload(path.join(ROOT, name), {
+        public_id: `${cloudinaryPrefix}${name}`,
+      })
+    }
 
     return {
       filename: name,

@@ -15,7 +15,9 @@ This project uses the following endpoints
     - Search engine is better backend than frontend, as client doesn't have to download the whole indexes.
 - GitHub Pages to store media (e.g. images) at no cost
   - For example, try sending GET requests to `https://*.github.io/blogdown-cms/media/*.png`
-- Editing is only enable offline (by running `yarn dev` or `yarn build && yarn start`)
+- If media is large than 10 MB, or total more than 1 GB, Cloudinary is set up.
+  - Just provide `CLOUDINARY_URL` in `.env`
+- Editing is only enabled offline (by running `yarn dev` or `yarn build && yarn start`)
   - So, it is safer than exposing every endpoints online, only what is needed.
 
 ## Plan

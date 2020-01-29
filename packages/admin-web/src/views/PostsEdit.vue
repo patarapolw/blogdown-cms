@@ -5,7 +5,7 @@
       b-collapse.card(:open.sync="isShowHeader" aria-id="header" style="margin-bottom: 1em;")
         .card-header(slot="trigger" slot-scope="props" role="button" aria-controls="header" style="align-items: center;")
           p.card-header-title
-            span(v-if="title") {{title}}
+            span(v-if="isLoading || title") {{title}}
             span.has-text-danger(v-else) {{noTitle}}
           div(style="flex-grow: 1;")
           div(@click.stop)
@@ -97,8 +97,8 @@ export default class PostEdit extends Vue {
   excerptHtml = ''
   remainingHtml = ''
   isShowRemaining = true
-  isShowHeader = true
-
+  isShowHeader = false
+  isLoading = false
   isEdited = false
 
   readonly noTitle = 'Title must not be empty'
@@ -139,18 +139,19 @@ export default class PostEdit extends Vue {
             const formData = new FormData()
             formData.append('file', blob)
 
+            const cursor = ins.getCursor()
+
             const r = await api.post('/api/media/create', formData)
             await api.put('/api/media/create', {
               filename: r.data.filename,
               type: 'clipboard',
             })
 
-            ins.getDoc().replaceRange(`![${r.data.filename}](${r.data.filename})`, ins.getCursor())
+            ins.getDoc().replaceRange(`![${r.data.filename}](${r.data.filename})`, cursor)
           }
         }
       }
     })
-    await this.load()
 
     window.onbeforeunload = (e: any) => {
       const msg = this.canSave ? 'Please save before leaving.' : null
@@ -187,6 +188,9 @@ export default class PostEdit extends Vue {
 
   @Watch('$route.query.id')
   async load () {
+    this.isShowHeader = false
+    this.isLoading = true
+
     const id = normalizeArray(this.$route.query.id)
     this.guid = nanoid(4)
 
@@ -209,8 +213,14 @@ export default class PostEdit extends Vue {
         setTimeout(() => {
           this.isEdited = false
         }, 100)
+      } else {
+        this.isShowHeader = true
       }
+    } else {
+      this.isShowHeader = true
     }
+
+    this.isLoading = false
   }
 
   async save () {

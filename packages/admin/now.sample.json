@@ -1,7 +1,0 @@
-{
-  "name": "<YOUR_DEPLOYMENT_NAME such as foo-blog>",
-  "version": 2,
-  "env": {
-    "MONGO_URI": "<YOUR_MONGO_URI>"
-  }
-}
