@@ -1,20 +1,18 @@
 {
   "name": "@blogdown-cms/admin",
   "version": "1.0.0",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "api/index.js",
   "license": "MIT",
   "private": true,
   "scripts": {
-    "start": "node dist/index.js",
-    "dev": "ts-node-dev src/index.ts",
-    "build": "tsc"
+    "local:dev": "NODE_ENV=development ts-node src/index.ts",
+    "local:build": "tsc",
+    "now:dev": "now dev",
+    "deploy": "now -e NODE_ENV=production"
   },
   "dependencies": {
-    "@blogdown-cms/admin-api": "*",
     "@typed-rest/express": "^0.1.2",
     "@typegoose/typegoose": "^6.2.2",
-    "connect-modrewrite": "^0.10.2",
     "dayjs": "^1.8.19",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
@@ -26,13 +24,18 @@
     "seo-friendly-slugify": "^1.0.5"
   },
   "devDependencies": {
+    "@blogdown-cms/admin-api": "*",
     "@types/express": "^4.17.2",
     "@types/express-formidable": "^1.0.4",
     "@types/mongoose": "^5.5.43",
     "@types/nanoid": "^2.1.0",
     "@types/rimraf": "^2.0.3",
+    "connect-history-api-fallback": "^1.6.0",
     "cors": "^2.8.5",
-    "ts-node-dev": "^1.0.0-pre.44",
+    "ts-node": "^8.6.2",
     "typescript": "^3.7.4"
+  },
+  "engines": {
+    "node": "10.x"
   }
 }

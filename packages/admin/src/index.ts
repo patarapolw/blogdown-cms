@@ -5,7 +5,6 @@ import bodyParser from 'body-parser'
 import dotenv from 'dotenv'
 import mongoose from 'mongoose'
 import rimraf from 'rimraf'
-import rewrite from 'connect-modrewrite'
 
 import PostsRouter from './router/posts'
 import MediaRouter from './router/media'
@@ -19,18 +18,15 @@ import MediaRouter from './router/media'
 
   if (process.env.NODE_ENV === 'development') {
     app.use(require('cors')())
+    app.use(require('connect-history-api-fallback')())
   }
 
-  app.use(rewrite([
-    '^/media/(.+)$ /api/media/$1',
-    '^/(?!api) / [L]',
-  ]))
   app.use('/api', bodyParser.json())
 
   PostsRouter(app)
   MediaRouter(app)
 
-  app.use(express.static(path.join(__dirname, '../web')))
+  app.use(express.static(path.join(__dirname, '../public')))
 
   const server = app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`)

@@ -1,0 +1,22 @@
+{
+  "name": "blogdown-cms",
+  "version": 2,
+  "build": {
+    "src": "dist/index.js",
+    "use": "@now/node",
+    "config": {
+      "includeFiles": [
+        "dist/**",
+        "web/**",
+        "upload/**"
+      ]
+    },
+    "env": {
+      "MONGO_URI": "<YOUR_MONGO_URI>"
+    }
+  },
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/[^.]+", "dest": "/" }
+  ]
+}
