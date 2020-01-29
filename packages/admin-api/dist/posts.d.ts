@@ -44,8 +44,9 @@ export interface IPostsApi {
       }
     }
     PUT: {
-      body: Partial<IPostsFull> & {
+      body: {
         id: string
+        update: Partial<IPostsFull>
       }
     }
     DELETE: {

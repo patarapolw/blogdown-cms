@@ -18,7 +18,6 @@
     .column
       b-table.posts-table(
         :data="items"
-        :columns="headers"
         :loading="isLoading"
         detailed
 
@@ -39,6 +38,13 @@
         :default-sort="[sort.key, sort.type]"
         @sort="onSort"
       )
+        template(slot-scope="props")
+          b-table-column(v-for="h in headers" :key="h.field"
+              :label="h.label" :width="h.width" :sortable="h.sortable")
+            span(v-if="h.field === 'tag'")
+              b-taglist
+                b-tag(v-for="t in props.row.tag" :key="t") {{t}}
+            span(v-else) {{props.row[h.field]}}
         template(slot="detail" slot-scope="props")
           .container(style="max-width: 800px; max-height: 300px; overflow: scroll;")
             .content(
@@ -123,7 +129,6 @@ export default class Posts extends Vue {
       return {
         ...el,
         date: el.date ? dayjs(el.date).format('YYYY-MM-DD HH:mm:ss Z') : '',
-        tag: el.tag ? el.tag.join('\n') : '',
       }
     }))
   }
@@ -197,7 +202,8 @@ export default class Posts extends Vue {
 
   onTableChecked (checked: any[]) {
     this.tagList = Array.from(new Set(checked
-      .map((el) => el.tag.split('\n').filter((t: string) => t))
+      .map((el) => el.tag)
+      .filter((t) => t)
       .reduce((a, b) => [...a!, ...b!], [])!))
 
     this.$set(this, 'tagList', this.tagList)
@@ -220,8 +226,14 @@ export default class Posts extends Vue {
 
 <style lang="scss">
 .posts-table {
-  tr {
-    cursor: pointer;
+  tbody {
+    tr {
+      cursor: pointer;
+    }
+
+    tr:hover {
+      background-color: lightblue;
+    }
   }
 }
 </style>

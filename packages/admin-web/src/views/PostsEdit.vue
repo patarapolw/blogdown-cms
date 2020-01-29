@@ -62,7 +62,23 @@ import MakeHtml from '../make-html'
 import api from '../api'
 import { normalizeArray } from '../utils'
 
-@Component
+@Component<PostEdit>({
+  beforeRouteLeave (to, from, next) {
+    const msg = this.canSave ? 'Please save before leaving.' : null
+
+    if (msg) {
+      this.$buefy.dialog.confirm({
+        message: msg,
+        confirmText: 'Leave',
+        cancelText: 'Cancel',
+        onConfirm: () => next(),
+        onCancel: () => next(false),
+      })
+    } else {
+      next()
+    }
+  },
+})
 export default class PostEdit extends Vue {
   guid = ''
   title = ''
@@ -124,7 +140,7 @@ export default class PostEdit extends Vue {
             formData.append('type', 'clipboard')
 
             api.request({
-              url: '/api/media/',
+              url: '/api/media/create',
               method: 'PUT',
               data: formData,
             }).then((r) => {
@@ -137,7 +153,6 @@ export default class PostEdit extends Vue {
     await this.load()
 
     window.onbeforeunload = (e: any) => {
-      console.log(e)
       const msg = this.canSave ? 'Please save before leaving.' : null
       if (msg) {
         e.returnValue = msg
@@ -222,12 +237,14 @@ export default class PostEdit extends Vue {
     } else {
       await api.put('/api/posts/', {
         id,
-        tag: this.tag,
-        title: this.title,
-        date: this.date.toISOString(),
-        excerpt,
-        remaining,
-        header,
+        update: {
+          tag: this.tag,
+          title: this.title,
+          date: this.date.toISOString(),
+          excerpt,
+          remaining,
+          header,
+        },
       })
     }
 

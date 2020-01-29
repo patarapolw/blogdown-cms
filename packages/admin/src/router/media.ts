@@ -7,8 +7,9 @@ import { String, Undefined } from 'runtypes'
 import fs from 'fs'
 import nanoid from 'nanoid'
 import dayjs from 'dayjs'
+import mongoose from 'mongoose'
 
-import { IMediaApi } from '@blogdown-cms/admin-api/dist/media'
+import { IMediaApi, IMediaFull } from '@blogdown-cms/admin-api'
 
 import { getMediaBucket } from '../db'
 
@@ -54,37 +55,12 @@ export default (app: Router) => {
     }
   })
 
-  app.put('/api/media/', formidable({
-    uploadDir: path.join(__dirname, '../../upload'),
-  }))
+  router.put('/api/media/', async (req, res) => {
+    const { filename, update } = req.body
+    const col = mongoose.connection.db.collection<IMediaFull>('fs.files')
+    await col.findOneAndUpdate({ filename: String.check(filename) }, { $set: update })
 
-  router.put('/api/media/', async (req) => {
-    let name = req.files!.file.name || String.Or(Undefined).check(req.fields!.name)
-    const type = String.Or(Undefined).check(req.fields!.type)
-
-    if (type === 'clipboard') {
-      name = `${dayjs().format('YYYY-MM-DD_HHmmss')}.png`
-    } else {
-      name = name ? (() => {
-        const [filename, ext] = name.split(/\.([a-z]+)$/i)
-        return `${filename}-${nanoid(4)}.${ext || 'png'}`
-      })() : `${nanoid()}.png`
-    }
-
-    await new Promise((resolve, reject) => {
-      fs.createReadStream(req.files!.file.path)
-        .pipe(mediaBucket.openUploadStream(name!, {
-          metadata: {
-            type,
-          },
-        }))
-        .on('error', reject)
-        .on('finish', resolve)
-    })
-
-    return {
-      name,
-    }
+    res.sendStatus(201)
   })
 
   router.delete('/api/media/', async (req, res) => {
@@ -115,6 +91,39 @@ export default (app: Router) => {
 
     if (!modified) {
       res.sendStatus(304)
+    }
+  })
+
+  app.put('/api/media/create', formidable({
+    uploadDir: path.join(__dirname, '../../upload'),
+  }))
+
+  router.put('/api/media/create', async (req) => {
+    let name = req.files!.file.name || String.Or(Undefined).check(req.fields!.name)
+    const type = String.Or(Undefined).check(req.fields!.type)
+
+    if (type === 'clipboard') {
+      name = `${dayjs().format('YYYY-MM-DD_HHmmss')}.png`
+    } else {
+      name = name ? (() => {
+        const [filename, ext] = name.split(/\.([a-z]+)$/i)
+        return `${filename}-${nanoid(4)}.${ext || 'png'}`
+      })() : `${nanoid()}.png`
+    }
+
+    await new Promise((resolve, reject) => {
+      fs.createReadStream(req.files!.file.path)
+        .pipe(mediaBucket.openUploadStream(name!, {
+          metadata: {
+            type,
+          },
+        }))
+        .on('error', reject)
+        .on('finish', resolve)
+    })
+
+    return {
+      name,
     }
   })
 

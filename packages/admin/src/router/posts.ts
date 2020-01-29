@@ -4,7 +4,7 @@ import { String, Array } from 'runtypes'
 import Slugify from 'seo-friendly-slugify'
 import nanoid from 'nanoid'
 
-import { IPostsApi } from '@blogdown-cms/admin-api/dist/posts'
+import { IPostsApi } from '@blogdown-cms/admin-api'
 import { PostModel, Post } from '../db'
 
 const slugify = new Slugify()
@@ -67,10 +67,10 @@ export default (app: Router) => {
   })
 
   router.put('/api/posts/', async (req, res) => {
-    const { id, ...u } = req.body
+    const { id, update } = req.body
 
     await PostModel.updateOne({ _id: String.check(id) }, {
-      $set: u,
+      $set: update,
     })
 
     res.sendStatus(201)

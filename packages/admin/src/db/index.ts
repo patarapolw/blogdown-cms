@@ -1,8 +1,8 @@
 import { prop, getModelForClass } from '@typegoose/typegoose'
-import { GridFSBucket, Db } from 'mongodb'
+import { GridFSBucket } from 'mongodb'
 import mongoose from 'mongoose'
 
-import { IPostsFull } from '@blogdown-cms/admin-api/dist/posts'
+import { IPostsFull } from '@blogdown-cms/admin-api'
 
 export class Post implements Omit<IPostsFull, 'date'> {
   @prop() _id!: string

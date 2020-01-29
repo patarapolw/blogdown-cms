@@ -27,22 +27,14 @@ export interface IMediaApi {
         count?: boolean
       }
       response: {
-        data: (IMediaFull & {
-          name: string
-        })[]
+        data: Partial<IMediaFull>[]
         count?: number
       }
     }
     PUT: {
-      fields: {
-        name?: string
-        type?: string
-      }
-      files: {
-        file: File
-      }
-      response: {
-        name: string
+      body: {
+        filename: string
+        update: Partial<IMediaFull>
       }
     }
     DELETE: {
@@ -54,11 +46,17 @@ export interface IMediaApi {
       }
     }
   }
-  '/api/media/edit': {
+  '/api/media/create': {
     PUT: {
-      body: {
-        q: any
-        set: any
+      fields: {
+        name?: string
+        type?: string
+      }
+      files: {
+        file: File
+      }
+      response: {
+        name: string
       }
     }
   }

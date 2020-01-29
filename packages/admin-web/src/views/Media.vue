@@ -4,9 +4,9 @@
     template(slot="end")
       b-navbar-item(tag="div")
         .buttons
-          button.button(@click="isAddMedia = true") Upload
+          button.button(@click="isAddMediaDialog = true") Upload
           button.button(@click="load") Reload
-          button.button(:disabled="selected.length !== 1" @click="rename") Rename
+          button.button(:disabled="selected.length !== 1" @click="isRenameMediaDialog = true") Rename
           b-dropdown(aria-role="list" position="is-bottom-left" :disabled="selected.length === 0")
             button.button(slot="trigger")
               span(style="margin-right: 0.5em") Batch Edit
@@ -38,7 +38,7 @@
               :alt="props.row.filename" :src="'/api/media/' + props.row.filename")
             span(v-else-if="h.field === 'type'") {{props.row.metadata.type}}
             span(v-else) {{props.row[h.field]}}
-  b-modal(:active.sync="isAddMedia" :width="500")
+  b-modal(:active.sync="isAddMediaDialog" :width="500")
     .card
       header.card-header
         .card-header-title Upload Media
@@ -54,7 +54,20 @@
         .buttons
           div(style="flex-grow: 1;")
           button.button.is-success(:disabled="newFiles.length === 0" @click="addMedia()") Save
-          button.button.is-danger(@click="isAddMedia = false") Close
+          button.button.is-danger(@click="isAddMediaDialog = false") Close
+  b-modal(:active.sync="isRenameMediaDialog" :width="500")
+    .card
+      header.card-header
+        .card-header-title Rename Media
+      .card-content
+        b-field(label="What do you want to rename to?"
+            :type="newFilename ? '' : 'is-danger'"
+            :message="newFilename ? '' : 'A filename is required.'")
+          b-input(v-model="newFilename")
+        .buttons
+          div(style="flex-grow: 1;")
+          button.button.is-success(:disabled="!newFilename || newFilename === selected[0].filename" @click="rename()") Rename
+          button.button.is-danger(@click="isRenameMediaDialog = false") Close
 </template>
 
 <script lang="ts">
@@ -83,8 +96,11 @@ export default class Posts extends Vue {
 
   isLoading = false
   count = 0
-  isAddMedia = false
+  isAddMediaDialog = false
   newFiles: File[] = []
+
+  isRenameMediaDialog = false
+  newFilename = ''
 
   perPage = 5
 
@@ -120,17 +136,17 @@ export default class Posts extends Vue {
       formData.append('file', f)
 
       await api.request({
-        url: '/api/media/',
+        url: '/api/media/create',
         method: 'PUT',
         data: formData,
       })
     }))
 
-    this.isAddMedia = false
+    this.isAddMediaDialog = false
     this.load()
   }
 
-  @Watch('isAddMedia')
+  @Watch('isAddMediaDialog')
   onAddMediaOpen (open: boolean) {
     if (open) {
       this.$set(this, 'newFiles', [])
@@ -177,12 +193,30 @@ export default class Posts extends Vue {
     })
   }
 
+  @Watch('isRenameMediaDialog')
+  onRenameOpen (open: boolean) {
+    const el = this.selected[0]
+
+    if (open && el) {
+      this.newFilename = el.filename
+    }
+  }
+
   async rename () {
     const el = this.selected[0]
 
     if (el) {
-      api.put('/api/media/edit')
+      await api.put('/api/media/', {
+        filename: el.filename,
+        update: {
+          filename: this.newFilename,
+        },
+      })
+
+      this.load()
     }
+
+    this.isRenameMediaDialog = false
   }
 }
 </script>
