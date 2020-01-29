@@ -19,8 +19,3 @@ This project uses the following endpoints
   - Just provide `CLOUDINARY_URL` in `.env`
 - Editing is only enabled offline (by running `yarn dev` or `yarn build && yarn start`)
   - So, it is safer than exposing every endpoints online, only what is needed.
-
-## Plan
-
-- Create commenting engine, at `https://*.now.sh/api/comments`
-- Create admin panel for comments

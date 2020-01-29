@@ -7,7 +7,7 @@ div
         strong CMS
     template(slot="start")
       b-navbar-item(tag="router-link" to="/posts" :class="$route.path === '/posts' ? 'is-active' : ''") Posts
-      b-navbar-item(tag="router-link" to="/comments" :class="$route.path === '/comments' ? 'is-active' : ''") Comments
+      //- b-navbar-item(tag="router-link" to="/comments" :class="$route.path === '/comments' ? 'is-active' : ''") Comments
       b-navbar-item(tag="router-link" to="/media" :class="$route.path === '/media' ? 'is-active' : ''") Media
     template(slot="end")
       b-navbar-item(tag="div")

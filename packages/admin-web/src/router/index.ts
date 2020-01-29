@@ -18,10 +18,10 @@ const router = new VueRouter({
       path: '/posts/edit',
       component: () => import(/* webpackChunkName: "PostsEdit" */ '../views/PostsEdit.vue'),
     },
-    {
-      path: '/comments',
-      component: () => import(/* webpackChunkName: "Comments" */ '../views/Comments.vue'),
-    },
+    // {
+    //   path: '/comments',
+    //   component: () => import(/* webpackChunkName: "Comments" */ '../views/Comments.vue'),
+    // },
     {
       path: '/media',
       component: () => import(/* webpackChunkName: "Media" */ '../views/Media.vue'),
