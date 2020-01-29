@@ -36,7 +36,6 @@
               :label="h.label" :width="h.width" :sortable="h.sortable")
             img(v-if="h.field === 'preview'"
               :alt="props.row.filename" :src="'/api/media/' + props.row.filename")
-            span(v-else-if="h.field === 'type'") {{props.row.metadata.type}}
             span(v-else) {{props.row[h.field]}}
   b-modal(:active.sync="isAddMediaDialog" :width="500")
     .card
@@ -114,7 +113,7 @@ export default class Posts extends Vue {
 
   @Watch('$route.query.page')
   async load () {
-    const r = await api.post('/api/media/', {
+    const r = await api.post('/api/media', {
       offset: (this.page - 1) * this.perPage,
       limit: this.perPage,
       sort: {
@@ -125,7 +124,7 @@ export default class Posts extends Vue {
     this.$set(this, 'items', r.data.data.map((el) => {
       return {
         ...el,
-        uploadDate: dayjs(el.uploadDate).format('YYYY-MM-DD HH:mm:ss Z'),
+        uploadDate: dayjs(el.createdAt).format('YYYY-MM-DD HH:mm:ss Z'),
       }
     }))
   }
@@ -134,11 +133,10 @@ export default class Posts extends Vue {
     await Promise.all(this.newFiles.map(async (f) => {
       const formData = new FormData()
       formData.append('file', f)
-
-      await api.request({
-        url: '/api/media/create',
-        method: 'PUT',
-        data: formData,
+      const r = await api.post('/api/media/create', formData)
+      await api.put('/api/media/create', {
+        filename: r.data.filename,
+        type: 'upload',
       })
     }))
 
@@ -206,7 +204,7 @@ export default class Posts extends Vue {
     const el = this.selected[0]
 
     if (el) {
-      await api.put('/api/media/', {
+      await api.put('/api/media', {
         filename: el.filename,
         update: {
           filename: this.newFilename,

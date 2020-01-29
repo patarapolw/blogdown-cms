@@ -9,10 +9,53 @@ import { PostModel, Post } from '../db'
 
 const slugify = new Slugify()
 
+export const publicPostsApi = async (
+  body: IPostsApi['/api/posts']['POST']['body'],
+): Promise<IPostsApi['/api/posts']['POST']['response']> => {
+  const { q, offset, limit, sort, projection, count } = body
+
+  let r = PostModel.find(q)
+
+  if (projection) {
+    r = r.select(projection)
+  }
+
+  if (sort) {
+    r = r.sort(sort)
+  }
+
+  if (offset) {
+    r = r.skip(offset)
+  }
+
+  if (limit) {
+    r = r.limit(limit)
+  }
+
+  let rCount: number | undefined
+
+  if (count) {
+    rCount = await PostModel.find(q).count()
+  }
+
+  return {
+    data: (await r).map((el) => {
+      const date = el.date
+
+      return {
+        ...el.toJSON(),
+        id: el._id,
+        date: date ? date.toISOString() : undefined,
+      }
+    }),
+    count: rCount,
+  }
+}
+
 export default (app: Router) => {
   const router = TypedRestRouter<IPostsApi>(app)
 
-  router.get('/api/posts/', async (req) => {
+  router.get('/api/posts', async (req) => {
     const r = await PostModel.findOne({ _id: req.query.id })
     if (r) {
       return {
@@ -25,48 +68,11 @@ export default (app: Router) => {
     return null
   })
 
-  router.post('/api/posts/', async (req) => {
-    const { q, offset, limit, sort, projection, count } = req.body
-
-    let r = PostModel.find(q)
-
-    if (projection) {
-      r = r.select(projection)
-    }
-
-    if (sort) {
-      r = r.sort(sort)
-    }
-
-    if (offset) {
-      r = r.skip(offset)
-    }
-
-    if (limit) {
-      r = r.limit(limit)
-    }
-
-    let rCount: number | undefined
-
-    if (count) {
-      rCount = await PostModel.find(q).count()
-    }
-
-    return {
-      data: (await r).map((el) => {
-        const date = el.date
-
-        return {
-          ...el.toJSON(),
-          id: el._id,
-          date: date ? date.toISOString() : undefined,
-        }
-      }),
-      count: rCount,
-    }
+  router.post('/api/posts', async (req) => {
+    return publicPostsApi(req.body)
   })
 
-  router.put('/api/posts/', async (req, res) => {
+  router.put('/api/posts', async (req, res) => {
     const { id, update } = req.body
 
     await PostModel.updateOne({ _id: String.check(id) }, {
@@ -77,7 +83,7 @@ export default (app: Router) => {
   })
 
   router.put('/api/posts/create', async (req) => {
-    const { date, slug, ...p } = req.body
+    const { date, id: slug, ...p } = req.body
     const { id } = await PostModel.create({
       ...p,
       _id: slug || `${(() => {
@@ -90,7 +96,7 @@ export default (app: Router) => {
     return { id }
   })
 
-  router.delete('/api/posts/', async (req, res) => {
+  router.delete('/api/posts', async (req, res) => {
     let isDeleted = false
 
     if (req.query.id) {

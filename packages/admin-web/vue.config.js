@@ -1,10 +1,12 @@
-const serverPort = '48000'
+const config = require('../../user/config.json')
+
+const serverPort = config.port
 
 process.env.VUE_APP_SERVER_PORT = serverPort
-process.env.VUE_APP_MATTER_EXCERPT_SEPARATOR = '<!-- excerpt_separator -->'
+process.env.VUE_APP_MATTER_EXCERPT_SEPARATOR = config['gray-matter']['excerpt-separator']
 
 module.exports = {
-  outputDir: '../admin/public',
+  outputDir: '../admin/web',
   devServer: {
     proxy: {
       '^/api/': {

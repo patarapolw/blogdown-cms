@@ -117,7 +117,7 @@ export default class Posts extends Vue {
   async load () {
     this.$set(this, 'checked', [])
 
-    const r = await api.post('/api/posts/', {
+    const r = await api.post('/api/posts', {
       offset: (this.page - 1) * this.perPage,
       limit: this.perPage,
       sort: {
@@ -156,7 +156,7 @@ export default class Posts extends Vue {
       type: 'is-danger',
       hasIcon: true,
       onConfirm: async () => {
-        await api.delete('/api/posts/', {
+        await api.delete('/api/posts', {
           data: {
             q: {
               _id: { $in: this.checked.map((el) => el.id) },
@@ -171,7 +171,7 @@ export default class Posts extends Vue {
 
   async getFilteredTags (s: string) {
     if (!this.allTags) {
-      this.allTags = Array.from(new Set((await api.post('/api/posts/', {
+      this.allTags = Array.from(new Set((await api.post('/api/posts', {
         q: { tag: { $exists: true } },
         limit: null,
         projection: { tag: 1 },

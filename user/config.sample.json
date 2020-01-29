@@ -1,0 +1,6 @@
+{
+  "port": 48000,
+  "gray-matter": {
+    "excerpt-separator": "<!-- excerpt_separator -->"
+  }
+}

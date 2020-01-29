@@ -1,8 +1,6 @@
 {
   "compilerOptions": {
     "strict": true,
-    "outDir": "./dist",
-    "rootDir": "./src",
     "skipLibCheck": true,
     "sourceMap": true,
     "declaration": true,

@@ -1,22 +1,10 @@
-export interface IFileSchema<T = any> {
-  length: number;
-  chunckSize: number;
-  uploadDate: Date;
-  md5: string;
-  filename: string;
-  contentType: string;
-  aliases: string[];
-  metadata: T;
+export interface IMediaFull {
+  filename: string
+  type?: string
 }
-
-export interface IMediaMetadata {
-  type?: 'clipboard'
-}
-
-export type IMediaFull = IFileSchema<IMediaMetadata>
 
 export interface IMediaApi {
-  '/api/media/': {
+  '/api/media': {
     POST: {
       body: {
         q?: Record<string, any>
@@ -27,7 +15,10 @@ export interface IMediaApi {
         count?: boolean
       }
       response: {
-        data: Partial<IMediaFull>[]
+        data: Partial<IMediaFull & {
+          createdAt: Date
+          updatedAt: Date
+        }>[]
         count?: number
       }
     }
@@ -47,16 +38,20 @@ export interface IMediaApi {
     }
   }
   '/api/media/create': {
-    PUT: {
-      fields: {
-        name?: string
-        type?: string
-      }
+    POST: {
       files: {
         file: File
       }
       response: {
-        name: string
+        filename: string
+      }
+    }
+    PUT: {
+      body: IMediaFull & {
+        id?: string
+      }
+      response: {
+        id: string
       }
     }
   }

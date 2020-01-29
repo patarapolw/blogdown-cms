@@ -3,15 +3,14 @@ import path from 'path'
 import express from 'express'
 import bodyParser from 'body-parser'
 import dotenv from 'dotenv'
-import mongoose from 'mongoose'
-import rimraf from 'rimraf'
 
 import PostsRouter from './router/posts'
 import MediaRouter from './router/media'
+import { mongooseConnect } from './db'
 
 (async () => {
   dotenv.config()
-  await mongoose.connect(process.env.MONGO_URI!, { useNewUrlParser: true, useUnifiedTopology: true })
+  await mongooseConnect()
 
   const app = express()
   const port = process.env.PORT || '48000'
@@ -26,16 +25,9 @@ import MediaRouter from './router/media'
   PostsRouter(app)
   MediaRouter(app)
 
-  app.use(express.static(path.join(__dirname, '../public')))
+  app.use(express.static(path.join(__dirname, '../web')))
 
-  const server = app.listen(port, () => {
+  app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`)
-  });
-
-  ['exit', 'SIGINT', 'SIGUSR1', 'SIGUSR2', 'uncaughtException', 'SIGTERM'].forEach((eventType) => {
-    process.on(eventType as any, () => {
-      server.close()
-      rimraf.sync(path.join(__dirname, '../upload/upload_*'))
-    })
   })
 })().catch(console.error)

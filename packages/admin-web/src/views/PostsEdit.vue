@@ -8,7 +8,8 @@
             span(v-if="title") {{title}}
             span.has-text-danger(v-else) {{noTitle}}
           div(style="flex-grow: 1;")
-          b-button.is-success(:disabled="!title" @click="save") Save
+          div(@click.stop)
+            b-button.is-success(:disabled="!title || !isEdited" @click="save") Save
           a.card-header-icon
             b-icon(:icon="props.open ? 'angle-down' : 'angle-up'")
         .card-content
@@ -137,15 +138,14 @@ export default class PostEdit extends Vue {
             const blob: File = item.getAsFile()
             const formData = new FormData()
             formData.append('file', blob)
-            formData.append('type', 'clipboard')
 
-            api.request({
-              url: '/api/media/create',
-              method: 'PUT',
-              data: formData,
-            }).then((r) => {
-              ins.getDoc().replaceRange(`![${r.data.name}](${r.data.name})`, ins.getCursor())
+            const r = await api.post('/api/media/create', formData)
+            await api.put('/api/media/create', {
+              filename: r.data.filename,
+              type: 'clipboard',
             })
+
+            ins.getDoc().replaceRange(`![${r.data.filename}](${r.data.filename})`, ins.getCursor())
           }
         }
       }
@@ -171,7 +171,7 @@ export default class PostEdit extends Vue {
 
   async getFilteredTags (s: string) {
     if (!this.data) {
-      this.data = (await api.post('/api/posts/', {
+      this.data = (await api.post('/api/posts', {
         q: { tag: { $exists: true } },
         limit: null,
         projection: { tag: 1 },
@@ -191,7 +191,7 @@ export default class PostEdit extends Vue {
     this.guid = nanoid(4)
 
     if (id) {
-      const r = (await api.get('/api/posts/', {
+      const r = (await api.get('/api/posts', {
         params: {
           id,
         },
@@ -205,6 +205,10 @@ export default class PostEdit extends Vue {
         this.slug = id
         this.date = dayjs(date).toDate()
         this.$set(this, 'tag', tag)
+
+        setTimeout(() => {
+          this.isEdited = false
+        }, 100)
       }
     }
   }
@@ -220,10 +224,10 @@ export default class PostEdit extends Vue {
 
     if (!id) {
       const r = await api.put('/api/posts/create', {
+        id: this.slug,
         tag: this.tag,
         title: this.title,
         date: this.date.toISOString(),
-        slug: this.slug,
         excerpt: excerpt,
         remaining: remaining,
         header,
@@ -235,7 +239,7 @@ export default class PostEdit extends Vue {
         },
       })
     } else {
-      await api.put('/api/posts/', {
+      await api.put('/api/posts', {
         id,
         update: {
           tag: this.tag,
@@ -249,7 +253,10 @@ export default class PostEdit extends Vue {
     }
 
     this.$buefy.snackbar.open('Saved')
-    this.isEdited = false
+
+    setTimeout(() => {
+      this.isEdited = false
+    }, 100)
   }
 
   onCmCodeChange (newCode: string) {

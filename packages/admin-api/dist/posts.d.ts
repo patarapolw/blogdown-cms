@@ -18,7 +18,7 @@ interface ITagEdit {
 }
 
 export interface IPostsApi {
-  '/api/posts/': {
+  '/api/posts': {
     GET: {
       query: {
         id: string
@@ -61,7 +61,7 @@ export interface IPostsApi {
   '/api/posts/create': {
     PUT: {
       body: IPostsFull & {
-        slug?: string
+        id?: string
       }
       response: {
         id: string

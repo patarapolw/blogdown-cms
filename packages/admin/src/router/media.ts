@@ -1,29 +1,28 @@
+import fs from 'fs'
 import path from 'path'
 
 import { Router } from 'express'
 import TypedRestRouter from '@typed-rest/express'
-import formidable from 'express-formidable'
-import { String, Undefined } from 'runtypes'
-import fs from 'fs'
+import { String } from 'runtypes'
 import nanoid from 'nanoid'
 import dayjs from 'dayjs'
-import mongoose from 'mongoose'
+import fileUpload from 'express-fileupload'
 
-import { IMediaApi, IMediaFull } from '@blogdown-cms/admin-api'
+import { IMediaApi } from '@blogdown-cms/admin-api'
+import { MediaModel, Media } from '../db'
 
-import { getMediaBucket } from '../db'
+const ROOT = path.resolve(__dirname, '../../public/media')
 
 export default (app: Router) => {
-  const mediaBucket = getMediaBucket()
   const router = TypedRestRouter<IMediaApi>(app)
 
-  router.post('/api/media/', async (req) => {
+  router.post('/api/media', async (req) => {
     const { q, offset, limit, sort, projection, count } = req.body
 
-    let r = mediaBucket.find(q)
+    let r = MediaModel.find(q)
 
     if (projection) {
-      r = r.project(projection)
+      r = r.select(projection)
     }
 
     if (sort) {
@@ -41,13 +40,13 @@ export default (app: Router) => {
     let rCount: number | undefined
 
     if (count) {
-      rCount = await mediaBucket.find(q).count()
+      rCount = await MediaModel.find(q).count()
     }
 
     return {
-      data: (await r.toArray()).map((el) => {
+      data: (await r).map((el) => {
         return {
-          ...el,
+          ...el.toJSON(),
           id: el.id!,
         }
       }),
@@ -55,15 +54,18 @@ export default (app: Router) => {
     }
   })
 
-  router.put('/api/media/', async (req, res) => {
+  router.put('/api/media', async (req, res) => {
     const { filename, update } = req.body
-    const col = mongoose.connection.db.collection<IMediaFull>('fs.files')
-    await col.findOneAndUpdate({ filename: String.check(filename) }, { $set: update })
+    await MediaModel.updateOne({ filename: String.check(filename) }, { $set: update })
+
+    if (update.filename) {
+      fs.renameSync(path.join(ROOT, filename), path.join(ROOT, update.filename))
+    }
 
     res.sendStatus(201)
   })
 
-  router.delete('/api/media/', async (req, res) => {
+  router.delete('/api/media', async (req, res) => {
     let q: any = null
 
     if (req.query.filename) {
@@ -77,12 +79,14 @@ export default (app: Router) => {
     let modified = false
 
     if (q) {
-      const ids = (await mediaBucket.find(q).project({ _id: 1 }).toArray()).map((el) => el._id)
+      const files = (await MediaModel.find(q).select({ filename: 1 })).map((el) => el.filename)
 
-      if (ids.length > 0) {
-        await Promise.all(ids.map((id) => new Promise((resolve, reject) => {
-          mediaBucket.delete(id, (err) => err ? reject(err) : resolve())
-        })))
+      if (files.length > 0) {
+        files.map((f) => {
+          fs.unlinkSync(path.join(ROOT, f))
+        })
+
+        await MediaModel.deleteMany(q)
 
         res.sendStatus(201)
         modified = true
@@ -94,15 +98,13 @@ export default (app: Router) => {
     }
   })
 
-  app.put('/api/media/create', formidable({
-    uploadDir: path.join(__dirname, '../../upload'),
-  }))
+  app.post('/api/media/create', fileUpload())
 
-  router.put('/api/media/create', async (req) => {
-    let name = req.files!.file.name || String.Or(Undefined).check(req.fields!.name)
-    const type = String.Or(Undefined).check(req.fields!.type)
+  router.post('/api/media/create', async (req, res) => {
+    const f = normalizeArray(req.files!.file)!
+    let name = f.name
 
-    if (type === 'clipboard') {
+    if (name === 'image.png') {
       name = `${dayjs().format('YYYY-MM-DD_HHmmss')}.png`
     } else {
       name = name ? (() => {
@@ -112,33 +114,37 @@ export default (app: Router) => {
     }
 
     await new Promise((resolve, reject) => {
-      fs.createReadStream(req.files!.file.path)
-        .pipe(mediaBucket.openUploadStream(name!, {
-          metadata: {
-            type,
-          },
-        }))
-        .on('error', reject)
-        .on('finish', resolve)
+      f.mv(path.join(ROOT, name), (err) => err ? reject(err) : resolve())
     })
 
     return {
-      name,
+      filename: name,
+    }
+  })
+
+  router.put('/api/media/create', async (req) => {
+    const { id = nanoid(), ...m } = req.body
+
+    await MediaModel.create({
+      ...m,
+      _id: id,
+    } as Media)
+
+    return {
+      id,
     }
   })
 
   router.get('/api/media/:filename', async (req, res) => {
-    await new Promise((resolve) => {
-      mediaBucket.openDownloadStreamByName(req.params.filename)
-        .on('error', (e) => {
-          console.error(e)
-          res.sendStatus(404)
-        })
-        .on('end', () => {
-          res.end()
-          resolve()
-        })
-        .pipe(res)
+    await new Promise((resolve, reject) => {
+      res.sendFile(path.join(ROOT, req.params.filename), (err) => err ? reject(err) : resolve())
     })
   })
+}
+
+export function normalizeArray<T> (a: T | T[]): T | undefined {
+  if (Array.isArray(a)) {
+    return a[0]
+  }
+  return a
 }
