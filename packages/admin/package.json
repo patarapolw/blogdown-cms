@@ -6,7 +6,6 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "serve": "yarn local:dev",
     "local:start": "node dist/index.js",
     "local:dev": "ts-node-dev src/index.ts",
     "local:build": "tsc -P src/tsconfig.json",
