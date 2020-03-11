@@ -42,7 +42,9 @@
       codemirror(v-model="markdown" ref="codemirror" @input="onCmCodeChange")
     .column(v-if="hasPreview")
       RevealPreview(v-if="type === 'reveal'" :id="id" :markdown="markdown" :cursor="cursor")
-      EditorPreview(v-else :title="title" :excerptHtml="excerptHtml" :remainingHtml="remainingHtml")
+      EditorPreview(v-else :title="title" :id="id" :markdown="markdown"
+        @excerpt="excerptHtml = $event" @remaining="remainingHtml = $event"
+      )
 </template>
 
 <script lang="ts">
@@ -51,7 +53,6 @@ import dayjs from 'dayjs'
 import matter from 'gray-matter'
 import Slugify from 'seo-friendly-slugify'
 
-import MakeHtml from '../make-html'
 import api from '../api'
 import { normalizeArray } from '../utils'
 
@@ -110,10 +111,6 @@ export default class Editor extends Vue {
 
   readonly noTitle = 'Title must not be empty'
   readonly slugify = new Slugify()
-
-  get makeHtml () {
-    return new MakeHtml(true, this.guid)
-  }
 
   get id () {
     return normalizeArray(this.$route.query.id)
@@ -286,20 +283,8 @@ export default class Editor extends Vue {
 
   @Watch('hasPreview')
   onCmCodeChange () {
-    if (this.hasPreview) {
-      this.isEdited = true
-      this.isShowHeader = false
-
-      // @ts-ignore
-      const [excerpt, remaining = ''] = this.markdown.split(process.env.VUE_APP_MATTER_EXCERPT_SEPARATOR!)
-
-      this.excerptHtml = this.makeHtml.parse(excerpt, false)
-      this.remainingHtml = remaining.trim() ? this.makeHtml.parse(remaining, false) : ''
-
-      this.$nextTick(() => {
-        this.makeHtml.activate()
-      })
-    }
+    this.isEdited = true
+    this.isShowHeader = false
   }
 
   generateSlug () {

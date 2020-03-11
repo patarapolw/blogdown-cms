@@ -1,0 +1,37 @@
+{
+  "name": "@patarapolw/blogdown-make-html",
+  "version": "1.0.0",
+  "description": "Make HTML for blogdown-cms",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "prepack": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "markdown"
+  ],
+  "author": {
+    "email": "patarapolw@gmail.com",
+    "url": "https://polvcode.dev",
+    "name": "Pacharapol Withayasakpunt"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "any-serialize": "^1.4.12",
+    "hyperpug": "^1.1.1",
+    "showdown": "^1.9.1",
+    "stylis": "^3.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^13.9.0",
+    "@types/showdown": "^1.9.3",
+    "htmlparser2": "^4.1.0",
+    "incremental-dom": "^0.7.0",
+    "typescript": "^3.8.3"
+  },
+  "peerDependencies": {
+    "htmlparser2": "^4.1.0",
+    "incremental-dom": "^0.7.0"
+  }
+}
