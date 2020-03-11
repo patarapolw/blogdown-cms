@@ -10,6 +10,7 @@
     "preinstall": "node ../../use-npm.js"
   },
   "dependencies": {
+    "@patarapolw/qsearch": "^1.1.1",
     "@typegoose/typegoose": "^6.2.2",
     "cloudinary": "^1.19.0",
     "dayjs": "^1.8.19",

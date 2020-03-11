@@ -1,9 +1,11 @@
 import { prop, getModelForClass } from '@typegoose/typegoose'
 import mongoose from 'mongoose'
+import { config } from '../config'
+
 let cachedDb: mongoose.Mongoose | null = null
 
 export class Post {
-  @prop({ required: true, unique: true }) slug!: string
+  @prop() _id!: string
   @prop() date?: Date
   @prop({ required: true }) title!: string
   @prop({ default: () => [] }) tag?: string[]
@@ -38,6 +40,10 @@ export const CommentModel = getModelForClass(Comment, { schemaOptions: { timesta
 
 export async function mongooseConnect () {
   if (!cachedDb) {
-    cachedDb = await mongoose.connect(process.env.MONGO_URI!, { useNewUrlParser: true, useUnifiedTopology: true })
+    cachedDb = await mongoose.connect(config.mongo.uri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      useCreateIndex: true
+    })
   }
 }

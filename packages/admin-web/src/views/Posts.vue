@@ -86,7 +86,7 @@ export default class Posts extends Vue {
     { label: 'Title', field: 'title', sortable: true },
     // { label: 'Type', field: 'header.type', width: 150, sortable: true },
     { label: 'Published by', field: 'date', width: 250, sortable: true },
-    { label: 'Tags', field: 'tag', width: 200, sortable: true },
+    { label: 'Tags', field: 'tag', width: 200, sortable: true }
   ]
 
   items: any[] = []
@@ -95,7 +95,7 @@ export default class Posts extends Vue {
   tagList: string[] = []
   sort = {
     key: 'date',
-    type: 'desc',
+    type: 'desc'
   }
 
   isLoading = false
@@ -117,18 +117,20 @@ export default class Posts extends Vue {
   async load () {
     this.$set(this, 'checked', [])
 
-    const r = await api.post('/api/posts', {
+    const r = await api.post('/api/post/', {
+      q: {},
       offset: (this.page - 1) * this.perPage,
       limit: this.perPage,
       sort: {
-        [this.sort.key]: this.sort.type === 'desc' ? -1 : 1,
-      },
+        key: this.sort.key,
+        desc: this.sort.type === 'desc'
+      }
     })
 
-    this.$set(this, 'items', r.data.data.map((el) => {
+    this.$set(this, 'items', r.data.data.map((el: any) => {
       return {
         ...el,
-        date: el.date ? dayjs(el.date).format('YYYY-MM-DD HH:mm:ss Z') : '',
+        date: el.date ? dayjs(el.date).format('YYYY-MM-DD HH:mm:ss Z') : ''
       }
     }))
   }
@@ -137,8 +139,8 @@ export default class Posts extends Vue {
     this.$router.push({
       query: {
         ...this.$route.query,
-        page: p.toString(),
-      },
+        page: p.toString()
+      }
     })
   }
 
@@ -156,29 +158,29 @@ export default class Posts extends Vue {
       type: 'is-danger',
       hasIcon: true,
       onConfirm: async () => {
-        await api.delete('/api/posts', {
+        await api.delete('/api/post/', {
           data: {
             q: {
-              _id: { $in: this.checked.map((el) => el.id) },
-            },
-          },
+              _id: { $in: this.checked.map((el) => el.id) }
+            }
+          }
         })
 
         this.load()
-      },
+      }
     })
   }
 
   async getFilteredTags (s: string) {
     if (!this.allTags) {
-      this.allTags = Array.from(new Set((await api.post('/api/posts', {
+      this.allTags = Array.from(new Set((await api.post('/api/post/', {
         q: { tag: { $exists: true } },
         limit: null,
-        projection: { tag: 1 },
+        projection: { tag: 1 }
       })).data.data
-        .map((el) => el.tag)
-        .filter((t) => t)
-        .reduce((a, b) => [...a!, ...b!], [])!))
+        .map((el: any) => el.tag)
+        .filter((t: string) => t)
+        .reduce((prev: any, c: any) => [...prev, ...c], [])))
       this.filteredTags = []
     } else {
       this.filteredTags = this.allTags
@@ -195,8 +197,8 @@ export default class Posts extends Vue {
     this.$router.push({
       path: '/posts/edit',
       query: {
-        id,
-      },
+        id
+      }
     })
   }
 
@@ -211,9 +213,9 @@ export default class Posts extends Vue {
 
   editTags () {
     this.$nextTick(async () => {
-      await api.post('/api/posts/tag', {
+      await api.put('/api/post/tag', {
         ids: this.checked.map((el) => el.id),
-        tags: this.tagList,
+        tags: this.tagList
       })
 
       this.isEditTagsDialog = false

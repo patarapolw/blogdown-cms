@@ -10,7 +10,9 @@ import router from './router'
 ;(async () => {
   await mongooseConnect()
 
-  const app = fastify()
+  const app = fastify({
+    logger: true
+  })
   const port = parseInt(process.env.PORT || (config.port || 24000).toString())
 
   if (process.env.NODE_ENV === 'development') {
@@ -27,7 +29,11 @@ import router from './router'
     reply.sendFile('index.html')
   })
 
-  app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`)
+  app.listen(port, (err, addr) => {
+    if (err) {
+      throw err
+    } else {
+      console.log(`Server is running on ${addr}`)
+    }
   })
 })().catch(console.error)

@@ -56,12 +56,19 @@
 import { Component, Vue, Watch } from 'vue-property-decorator'
 import dayjs from 'dayjs'
 import matter from 'gray-matter'
-import nanoid from 'nanoid'
 import Slugify from 'seo-friendly-slugify'
 
 import MakeHtml from '../make-html'
 import api from '../api'
 import { normalizeArray } from '../utils'
+
+declare global {
+  namespace CodeMirror {
+    interface Editor {
+      on(type: 'paste', handler: (editor: CodeMirror.Editor, evt: ClipboardEvent) => void): void
+    }
+  }
+}
 
 @Component<PostEdit>({
   beforeRouteLeave (to, from, next) {
@@ -73,12 +80,12 @@ import { normalizeArray } from '../utils'
         confirmText: 'Leave',
         cancelText: 'Cancel',
         onConfirm: () => next(),
-        onCancel: () => next(false),
+        onCancel: () => next(false)
       })
     } else {
       next()
     }
-  },
+  }
 })
 export default class PostEdit extends Vue {
   guid = ''
@@ -124,11 +131,10 @@ export default class PostEdit extends Vue {
     this.codemirror.setSize('100%', '100%')
     this.codemirror.addKeyMap({
       'Cmd-S': () => { this.save() },
-      'Ctrl-S': () => { this.save() },
+      'Ctrl-S': () => { this.save() }
     })
 
-    // @ts-ignore
-    this.codemirror.on('paste', async (ins: CodeMirror.Editor, evt: ClipboardEvent) => {
+    this.codemirror.on('paste', async (ins, evt) => {
       const { items } = evt.clipboardData || {} as any
       if (items) {
         for (const k of Object.keys(items)) {
@@ -141,13 +147,10 @@ export default class PostEdit extends Vue {
 
             const cursor = ins.getCursor()
 
-            const r = await api.post('/api/media/create', formData)
-            await api.put('/api/media/create', {
-              filename: r.data.filename,
-              type: 'clipboard',
-            })
+            const r = await api.post('/api/media/upload', formData)
+            const url = `/api/media/${r.data.type}/${r.data.filename}`
 
-            ins.getDoc().replaceRange(`![${r.data.filename}](${r.data.filename})`, cursor)
+            ins.getDoc().replaceRange(`![${r.data.filename}](${url} local)`, cursor)
           }
         }
       }
@@ -172,15 +175,15 @@ export default class PostEdit extends Vue {
 
   async getFilteredTags (s: string) {
     if (!this.data) {
-      this.data = (await api.post('/api/posts', {
+      this.data = (await api.post('/api/post/', {
         q: { tag: { $exists: true } },
         limit: null,
-        projection: { tag: 1 },
+        projection: { tag: 1 }
       })).data.data
       this.getFilteredTags('')
     }
 
-    this.filteredTags = this.data
+    this.filteredTags = this.data!
       .map((d) => d.tag)
       .filter((t) => t && (s.trim() ? t.includes(s) : true))
       .reduce((a, b) => [...a!, ...b!], [])!
@@ -192,19 +195,19 @@ export default class PostEdit extends Vue {
     this.isLoading = true
 
     const id = normalizeArray(this.$route.query.id)
-    this.guid = nanoid(4)
+    this.guid = Math.random().toString(36).substr(2)
 
     if (id) {
-      const r = (await api.get('/api/posts', {
+      const r = (await api.get('/api/post/', {
         params: {
-          id,
-        },
-      })).data
+          id
+        }
+      }))
 
-      if (r) {
-        const { excerpt, remaining, header, title, date, tag, id } = r
+      if (r.data) {
+        const { excerpt, remaining, header, title, date, tag, id, raw } = r.data
 
-        this.markdown = matter.stringify(`${excerpt}${process.env.VUE_APP_MATTER_EXCERPT_SEPARATOR}${remaining}`, header)
+        this.markdown = raw
         this.title = title
         this.slug = id
         this.date = dayjs(date).toDate()
@@ -229,36 +232,39 @@ export default class PostEdit extends Vue {
     }
 
     const id = normalizeArray(this.$route.query.id)
-    const { data: header = {}, content } = matter(this.markdown)
-    const [excerpt, remaining = ''] = content.split(process.env.VUE_APP_MATTER_EXCERPT_SEPARATOR!)
+    const { data: header = {} } = matter(this.markdown)
 
     if (!id) {
-      const r = await api.put('/api/posts/create', {
-        id: this.slug,
+      /**
+       * Create a post
+       */
+      const r = await api.put('/api/post/', {
+        slug: this.slug,
         tag: this.tag,
         title: this.title,
         date: this.date.toISOString(),
-        excerpt: excerpt,
-        remaining: remaining,
-        header,
+        excerpt: this.excerptHtml,
+        remaining: this.remainingHtml,
+        raw: this.markdown,
+        header
       })
 
       this.$router.push({
         query: {
-          id: r.data.id,
-        },
+          id: r.data._id
+        }
       })
     } else {
-      await api.put('/api/posts', {
+      await api.patch('/api/post/', {
         id,
         update: {
           tag: this.tag,
           title: this.title,
           date: this.date.toISOString(),
-          excerpt,
-          remaining,
-          header,
-        },
+          excerpt: this.excerptHtml,
+          remaining: this.remainingHtml,
+          header
+        }
       })
     }
 
@@ -274,6 +280,7 @@ export default class PostEdit extends Vue {
     this.isShowRemaining = true
     this.isShowHeader = false
 
+    // @ts-ignore
     const [excerpt, remaining = ''] = newCode.split(process.env.VUE_APP_MATTER_EXCERPT_SEPARATOR!)
 
     this.excerptHtml = this.makeHtml.parse(excerpt)
@@ -290,7 +297,21 @@ export default class PostEdit extends Vue {
 </script>
 
 <style lang="scss">
+.vue-codemirror {
+  display: grid;
+}
+
 .CodeMirror-lines {
   padding-bottom: 100px;
+}
+
+.CodeMirror-line {
+  word-break: break-all !important;
+}
+
+iframe {
+  display: block;
+  width: 100%;
+  max-width: 500px;
 }
 </style>

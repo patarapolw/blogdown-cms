@@ -1,5 +1,4 @@
 import Vue from 'vue'
-// @ts-ignore
 import VueCodemirror from 'vue-codemirror'
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/mode/markdown/markdown.js'
@@ -17,7 +16,6 @@ import 'codemirror/addon/fold/indent-fold.js'
 import 'codemirror/addon/fold/comment-fold.js'
 import 'codemirror/addon/fold/markdown-fold.js'
 import 'codemirror/addon/fold/foldgutter.css'
-// import 'codemirror/addon/scroll/scrollpastend.js'
 import 'codemirror/theme/monokai.css'
 
 Vue.use(VueCodemirror, {
@@ -34,13 +32,12 @@ Vue.use(VueCodemirror, {
       Tab: (cm: CodeMirror.Editor) => {
         const spaces = Array(cm.getOption('indentUnit')! + 1).join(' ')
         cm.getDoc().replaceSelection(spaces)
-      },
+      }
     },
     foldGutter: true,
-    // scrollPastEnd: true,
     mode: {
       name: 'yaml-frontmatter',
-      base: 'markdown',
-    },
-  },
+      base: 'markdown'
+    }
+  }
 })

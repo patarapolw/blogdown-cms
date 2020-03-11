@@ -17,13 +17,18 @@ const router = (f: FastifyInstance, opts: any, next: () => void) => {
       produces: ['application/json'],
       tags: [
         { name: 'media', description: 'Media related endpoints' },
-        { name: 'post', description: 'Post related endpoints' }
+        { name: 'post', description: 'Post related endpoints' },
+        { name: 'comment', description: 'Comment related endpoints' }
       ],
       components: {
         securitySchemes: {
           BasicAuth: {
             type: 'http',
             scheme: 'basic'
+          },
+          BearerAuth: {
+            type: 'http',
+            scheme: 'bearer'
           }
         }
       }

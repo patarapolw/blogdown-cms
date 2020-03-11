@@ -20,6 +20,8 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
 
   f.patch('/', {
     schema: {
+      tags: ['media'],
+      summary: 'Update media filename',
       body: {
         type: 'object',
         required: ['filename', 'newFilename', 'type'],
@@ -42,32 +44,12 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
     )
   })
 
-  f.delete('/', {
-    schema: {
-      querystring: {
-        type: 'object',
-        required: ['filename', 'type'],
-        properties: {
-          filename: { type: 'string' },
-          type: { type: 'string', enum: ['admin', 'client'] }
-        }
-      }
-    }
-  }, async (req) => {
-    const { filename, type } = req.query
-
-    if (fs.existsSync(path.join(tmp, filename))) {
-      fs.unlinkSync(path.join(tmp, filename))
-    }
-
-    const bucket = (buckets as any)[type]
-    await cloudinary.v2.uploader.destroy(joinPath(bucket, filename))
-  })
-
   f.register(multipart)
 
   f.post('/upload', {
     schema: {
+      tags: ['media'],
+      summary: 'Upload media',
       body: {
         type: 'object',
         required: ['file', 'type'],
@@ -113,13 +95,18 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
       cloudinary.v2.uploader.upload(path.join(tmp, name), {
         public_id: joinPath(bucket, filename)
       }).then(() => {
-        reply.code(200).send()
+        reply.code(200).send({
+          filename,
+          type
+        })
       })
     })
   })
 
   f.get('/:type/:filename', {
     schema: {
+      tags: ['media'],
+      summary: 'Get media',
       params: {
         type: 'object',
         properties: {

@@ -4,29 +4,29 @@ import VueRouter from 'vue-router'
 Vue.use(VueRouter)
 
 const router = new VueRouter({
-  mode: 'history',
+  mode: 'hash',
   routes: [
     {
       path: '/',
-      redirect: '/posts',
+      redirect: '/posts'
     },
     {
       path: '/posts',
-      component: () => import(/* webpackChunkName: "Posts" */ '../views/Posts.vue'),
+      component: () => import(/* webpackChunkName: "Posts" */ '../views/Posts.vue')
     },
     {
       path: '/posts/edit',
-      component: () => import(/* webpackChunkName: "PostsEdit" */ '../views/PostsEdit.vue'),
-    },
+      component: () => import(/* webpackChunkName: "PostsEdit" */ '../views/PostsEdit.vue')
+    }
     // {
     //   path: '/comments',
     //   component: () => import(/* webpackChunkName: "Comments" */ '../views/Comments.vue'),
     // },
-    {
-      path: '/media',
-      component: () => import(/* webpackChunkName: "Media" */ '../views/Media.vue'),
-    },
-  ],
+    // {
+    //   path: '/media',
+    //   component: () => import(/* webpackChunkName: "Media" */ '../views/Media.vue')
+    // }
+  ]
 })
 
 export default router

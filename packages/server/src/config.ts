@@ -16,7 +16,7 @@ const configSchema = Record({
       admin: String,
       client: String
     }),
-    apiKey: String,
+    apiKey: String.Or(Number),
     apiSecret: String,
     cloudName: String,
     tmp: String

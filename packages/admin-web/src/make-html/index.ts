@@ -1,8 +1,6 @@
 import showdown from 'showdown'
 import HyperPug from 'hyperpug'
-// @ts-ignore
-import scopeCss from 'scope-css'
-import nanoid from 'nanoid'
+import stylis from 'stylis'
 import h from 'hyperscript'
 import matter from 'gray-matter'
 
@@ -12,13 +10,13 @@ export default class MakeHtml {
 
   html = ''
 
-  constructor (public id = nanoid()) {
+  constructor (public id = 'el-' + Math.random().toString(36).substr(2)) {
     this.md.addExtension({
       type: 'lang',
       regex: /\n```pug parsed\n(.+)\n```\n/gs,
       replace: (_: string, p1: string) => {
         return this.pugConvert(p1)
-      },
+      }
     }, 'pug')
 
     this.md.addExtension({
@@ -26,20 +24,12 @@ export default class MakeHtml {
       regex: /\n```css parsed\n(.+)\n```\n/gs,
       replace: (_: string, p1: string) => {
         return this.makeCss(p1)
-      },
+      }
     }, 'css')
-
-    this.md.addExtension({
-      type: 'lang',
-      regex: /!\[([^\]]*)\]\(([^)/]+)\)/g,
-      replace: (_: string, p1: string, p2: string) => {
-        return `![${p1}](${`/api/media/${p2}`})`
-      },
-    }, 'local-image')
 
     this.hp = new HyperPug({
       markdown: (s) => this.mdConvert(s),
-      css: (s) => this.mdConvert(s),
+      css: (s) => this.mdConvert(s)
     })
   }
 
@@ -63,7 +53,7 @@ export default class MakeHtml {
 
     const output = h('div', {
       id: this.id,
-      innerHTML: this.html,
+      innerHTML: this.html
     }).outerHTML
 
     return output
@@ -80,8 +70,8 @@ export default class MakeHtml {
   makeCss (s: string) {
     return h('style', {
       attrs: {
-        'data-content': scopeCss(s, `#${this.id}`),
-      },
+        'data-content': stylis(`#${this.id}`, s)
+      }
     }).outerHTML
   }
 }

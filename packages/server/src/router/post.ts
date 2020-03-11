@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { String, Array } from 'runtypes'
 import Slugify from 'seo-friendly-slugify'
+import QSearch from '@patarapolw/qsearch'
 
 import { PostModel, Post } from '../db'
 
@@ -9,13 +10,10 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
 
   f.get('/', {
     schema: {
+      tags: ['post'],
+      summary: 'Get a post',
       querystring: {
         id: { type: 'string' }
-      },
-      response: {
-        200: {
-          type: 'object'
-        }
       }
     }
   }, async (req) => {
@@ -33,13 +31,15 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
 
   f.post('/', {
     schema: {
+      tags: ['post'],
+      summary: 'Query for posts',
       body: {
         type: 'object',
         required: ['q'],
         properties: {
           q: { type: ['string', 'object'] },
           offset: { type: 'number' },
-          limit: { type: 'nunmber' },
+          limit: { type: 'number' },
           sort: {
             type: 'object',
             required: ['key', 'desc'],
@@ -60,7 +60,21 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
       }
     }
   }, async (req) => {
-    const { q, offset, limit, sort, projection, count } = req.body
+    let { q, offset, limit, sort, projection, count } = req.body
+
+    if (typeof q === 'string') {
+      const qSearch = new QSearch({
+        dialect: 'mongodb',
+        schema: {
+          slug: {},
+          date: { type: 'date' },
+          title: {},
+          tag: {},
+          excerpt: {}
+        }
+      })
+      q = qSearch.parse(q).cond
+    }
 
     let r = PostModel.find(q)
 
@@ -69,7 +83,9 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
     }
 
     if (sort) {
-      r = r.sort(sort)
+      r = r.sort({
+        [sort.key]: sort.desc ? -1 : 1
+      })
     }
 
     if (offset) {
@@ -102,6 +118,8 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
 
   f.patch('/', {
     schema: {
+      tags: ['post'],
+      summary: 'Update post',
       body: {
         type: 'object',
         required: ['id', 'update'],
@@ -125,17 +143,18 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
 
   f.put('/', {
     schema: {
+      tags: ['post'],
+      summary: 'Create post',
       body: {
         type: 'object',
         required: ['date'],
         properties: {
-          date: { type: 'string' },
-          id: { type: 'string' }
+          date: { type: 'string' }
         }
       }
     }
   }, async (req) => {
-    const { date, id: slug, ...p } = req.body
+    const { date, slug, ...p } = req.body
     const { id } = await PostModel.create({
       ...p,
       _id: slug || `${(() => {
@@ -150,6 +169,8 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
 
   f.delete('/', {
     schema: {
+      tags: ['post'],
+      summary: 'Delete post',
       querystring: {
         id: { type: 'string' }
       },
@@ -185,6 +206,8 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
 
   f.put('/tag', {
     schema: {
+      tags: ['post'],
+      summary: 'Replace post tags',
       body: {
         type: 'object',
         required: ['ids', 'tags'],
@@ -209,6 +232,8 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
 
   f.patch('/tag', {
     schema: {
+      tags: ['post'],
+      summary: 'Update post tags',
       body: {
         type: 'object',
         required: ['ids', 'tags'],
@@ -233,6 +258,8 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
 
   f.delete('/tag', {
     schema: {
+      tags: ['post'],
+      summary: 'Delete post tags',
       body: {
         type: 'object',
         required: ['ids', 'tags'],
