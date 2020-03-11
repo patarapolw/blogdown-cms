@@ -147,7 +147,6 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
       summary: 'Create post',
       body: {
         type: 'object',
-        required: ['date'],
         properties: {
           date: { type: 'string' }
         }
@@ -161,7 +160,7 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
         const s = slugify.slugify(p.title)
         return s ? `${s}-` : ''
       })()}${Math.random().toString(36).substr(2)}`,
-      date: new Date(String.check(date))
+      date: date ? new Date(date) : undefined
     } as Post)
 
     return { id }

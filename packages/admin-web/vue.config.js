@@ -15,5 +15,9 @@ module.exports = {
         target: `http://localhost:${process.env.VUE_APP_SERVER_PORT}`
       }
     }
+  },
+  pages: {
+    index: 'src/main.ts',
+    reveal: 'src/reveal.ts'
   }
 }

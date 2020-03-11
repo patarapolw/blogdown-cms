@@ -14,6 +14,7 @@
     "@fortawesome/vue-fontawesome": "^0.1.9",
     "@types/codemirror": "^0.0.83",
     "@types/hyperscript": "^0.0.3",
+    "any-serialize": "^1.4.12",
     "axios": "^0.19.2",
     "buefy": "^0.8.10",
     "core-js": "^3.4.4",

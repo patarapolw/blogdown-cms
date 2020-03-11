@@ -11,8 +11,18 @@ import router from './router'
   await mongooseConnect()
 
   const app = fastify({
-    logger: true
+    logger: {
+      prettyPrint: true
+    }
   })
+  app.addHook('preHandler', function (req, reply, done) {
+    if (req.body) {
+      req.log.info({ body: req.body }, 'body')
+    }
+
+    done()
+  })
+
   const port = parseInt(process.env.PORT || (config.port || 24000).toString())
 
   if (process.env.NODE_ENV === 'development') {
@@ -29,11 +39,9 @@ import router from './router'
     reply.sendFile('index.html')
   })
 
-  app.listen(port, (err, addr) => {
+  app.listen(port, (err) => {
     if (err) {
       throw err
-    } else {
-      console.log(`Server is running on ${addr}`)
     }
   })
 })().catch(console.error)

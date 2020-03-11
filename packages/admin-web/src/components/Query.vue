@@ -4,7 +4,7 @@
     template(slot="end")
       b-navbar-item(tag="div")
         .buttons
-          router-link.button(to="/posts/edit") New
+          router-link.button(:to="newTo") New
           button.button(@click="load") Reload
           b-dropdown(aria-role="list" position="is-bottom-left")
             button.button(:disabled="checked.length === 0" slot="trigger")
@@ -16,7 +16,7 @@
               p(role="button" @click="doDelete") Delete
   .columns
     .column
-      b-table.posts-table(
+      b-table.query-table(
         :data="items"
         :loading="isLoading"
         detailed
@@ -70,7 +70,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from 'vue-property-decorator'
+import { Component, Vue, Watch, Prop } from 'vue-property-decorator'
 import dayjs from 'dayjs'
 
 import MakeHtml from '../make-html'
@@ -78,16 +78,11 @@ import api from '../api'
 import { normalizeArray } from '../utils'
 
 @Component
-export default class Posts extends Vue {
+export default class Query extends Vue {
+  @Prop() type?: string
+
   selected: any = null
   checked: any[] = []
-  headers = [
-    { label: 'id', field: 'id', width: 200 },
-    { label: 'Title', field: 'title', sortable: true },
-    // { label: 'Type', field: 'header.type', width: 150, sortable: true },
-    { label: 'Published by', field: 'date', width: 250, sortable: true },
-    { label: 'Tags', field: 'tag', width: 200, sortable: true }
-  ]
 
   items: any[] = []
   allTags: string[] | null = null
@@ -109,6 +104,28 @@ export default class Posts extends Vue {
     return parseInt(normalizeArray(this.$route.query.page) || '1')
   }
 
+  get headers () {
+    const h = {
+      id: { label: 'id', field: 'id', width: 200 },
+      title: { label: 'Title', field: 'title', sortable: true },
+      date: { label: 'Date', field: 'date', width: 250, sortable: true },
+      tags: { label: 'Tags', field: 'tag', width: 200 }
+    }
+
+    return [
+      h.id,
+      h.title,
+      h.tags,
+      this.type === 'reveal' ? undefined : h.date
+    ].filter((el) => el)
+  }
+
+  get newTo () {
+    return `/${
+        this.type === 'reveal' ? 'reveal' : 'post'
+      }/edit`
+  }
+
   mounted () {
     this.load()
   }
@@ -118,7 +135,11 @@ export default class Posts extends Vue {
     this.$set(this, 'checked', [])
 
     const r = await api.post('/api/post/', {
-      q: {},
+      q: {
+        type: this.type === undefined ? {
+          $exists: false
+        } : this.type
+      },
       offset: (this.page - 1) * this.perPage,
       limit: this.perPage,
       sort: {
@@ -174,7 +195,9 @@ export default class Posts extends Vue {
   async getFilteredTags (s: string) {
     if (!this.allTags) {
       this.allTags = Array.from(new Set((await api.post('/api/post/', {
-        q: { tag: { $exists: true } },
+        q: {
+          tag: { $exists: true }
+        },
         limit: null,
         projection: { tag: 1 }
       })).data.data
@@ -189,13 +212,13 @@ export default class Posts extends Vue {
   }
 
   preview (s: string) {
-    const makeHtml = new MakeHtml()
+    const makeHtml = new MakeHtml(true)
     return makeHtml.parse(s)
   }
 
   openItem (id: string) {
     this.$router.push({
-      path: '/posts/edit',
+      path: this.newTo,
       query: {
         id
       }
@@ -227,7 +250,7 @@ export default class Posts extends Vue {
 </script>
 
 <style lang="scss">
-.posts-table {
+.query-table {
   tbody {
     tr {
       cursor: pointer;

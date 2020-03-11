@@ -8,24 +8,30 @@ const router = new VueRouter({
   routes: [
     {
       path: '/',
-      redirect: '/posts'
+      redirect: '/post'
     },
     {
-      path: '/posts',
-      component: () => import(/* webpackChunkName: "Posts" */ '../views/Posts.vue')
+      path: '/post',
+      component: () => import('../components/Query.vue')
     },
     {
-      path: '/posts/edit',
-      component: () => import(/* webpackChunkName: "PostsEdit" */ '../views/PostsEdit.vue')
+      path: '/post/edit',
+      component: () => import('../components/Editor.vue')
+    },
+    {
+      path: '/reveal',
+      component: () => import('../components/Query.vue'),
+      props: { type: 'reveal' }
+    },
+    {
+      path: '/reveal/edit',
+      component: () => import('../components/Editor.vue'),
+      props: { type: 'reveal' }
     }
     // {
     //   path: '/comments',
     //   component: () => import(/* webpackChunkName: "Comments" */ '../views/Comments.vue'),
     // },
-    // {
-    //   path: '/media',
-    //   component: () => import(/* webpackChunkName: "Media" */ '../views/Media.vue')
-    // }
   ]
 })
 

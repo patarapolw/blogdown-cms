@@ -1,14 +1,15 @@
 <template lang="pug">
 .container
-  .columns(style="margin-top: 1em; min-height: 90vh;")
-    .column
+  .columns.editor(:class="type === 'reveal' ? 'editor-for-iframe' : 'editor-for-regular'")
+    .column(:style="type === 'reveal' ? 'overflow-y: scroll;' : ''")
       b-collapse.card(:open.sync="isShowHeader" aria-id="header" style="margin-bottom: 1em;")
         .card-header(slot="trigger" slot-scope="props" role="button" aria-controls="header" style="align-items: center;")
           p.card-header-title
             span(v-if="isLoading || title") {{title}}
             span.has-text-danger(v-else) {{noTitle}}
           div(style="flex-grow: 1;")
-          div(@click.stop)
+          .buttons.header-buttons(@click.stop)
+            b-button.is-warning(@click="hasPreview = !hasPreview") {{hasPreview ? 'Hide' : 'Show'}} Preview
             b-button.is-success(:disabled="!title || !isEdited" @click="save") Save
           a.card-header-icon
             b-icon(:icon="props.open ? 'angle-down' : 'angle-up'")
@@ -25,7 +26,7 @@
             :message="slug ? '' : 'Slug must not be empty'"
           )
             b-input(v-model="slug")
-          b-field(label="Published by")
+          b-field(label="Date" v-if="type !== 'reveal'")
             b-datetimepicker(
               rounded icon="calendar-alt"
               :datetime-formatter="formatDate"
@@ -36,24 +37,16 @@
               v-model="tag" ellipsis icon="tag" placeholder="Add tags"
               autocomplete allow-new open-on-focus :data="filteredTags" @typing="getFilteredTags"
             )
-          b-field
+          b-field(v-if="type !== 'reveal'")
             b-switch(v-model="isDraft") Draft
       codemirror(v-model="markdown" ref="codemirror" @input="onCmCodeChange")
-    .column
-      .card(style="min-height: 100%;")
-        .card-content
-          h1.title {{title}}
-          .content(v-html="excerptHtml")
-          b-collapse(v-if="remainingHtml" :open="isShowRemaining" position="is-bottom" aria-id="show-remaining")
-            a(slot="trigger" slot-scope="props" aria-controls="show-remaining")
-              b-icon(:icon="!props.open ? 'angle-down' : 'angle-up'")
-              span {{ !props.open ? 'Show more' : 'Show less' }}
-            hr
-            .content(v-html="remainingHtml")
+    .column(v-if="hasPreview")
+      RevealPreview(v-if="type === 'reveal'" :id="id" :markdown="markdown" :cursor="cursor")
+      EditorPreview(v-else :title="title" :excerptHtml="excerptHtml" :remainingHtml="remainingHtml")
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from 'vue-property-decorator'
+import { Component, Vue, Watch, Prop } from 'vue-property-decorator'
 import dayjs from 'dayjs'
 import matter from 'gray-matter'
 import Slugify from 'seo-friendly-slugify'
@@ -70,7 +63,7 @@ declare global {
   }
 }
 
-@Component<PostEdit>({
+@Component<Editor>({
   beforeRouteLeave (to, from, next) {
     const msg = this.canSave ? 'Please save before leaving.' : null
 
@@ -85,9 +78,15 @@ declare global {
     } else {
       next()
     }
+  },
+  components: {
+    RevealPreview: () => import('./RevealPreview.vue'),
+    EditorPreview: () => import('./EditorPreview.vue')
   }
 })
-export default class PostEdit extends Vue {
+export default class Editor extends Vue {
+  @Prop() type?: string
+
   guid = ''
   title = ''
   slug = ''
@@ -101,17 +100,24 @@ export default class PostEdit extends Vue {
     tag?: string[]
   }[] | null = null
 
+  hasPreview = true
   excerptHtml = ''
   remainingHtml = ''
-  isShowRemaining = true
   isShowHeader = false
   isLoading = false
   isEdited = false
+  cursor = 0
 
   readonly noTitle = 'Title must not be empty'
+  readonly slugify = new Slugify()
 
-  makeHtml = new MakeHtml()
-  slugify = new Slugify()
+  get makeHtml () {
+    return new MakeHtml(true, this.guid)
+  }
+
+  get id () {
+    return normalizeArray(this.$route.query.id)
+  }
 
   get codemirror (): CodeMirror.Editor {
     return (this.$refs.codemirror as any).codemirror
@@ -121,17 +127,21 @@ export default class PostEdit extends Vue {
     return this.title && this.isEdited
   }
 
-  async created () {
+  created () {
     this.getFilteredTags('')
     this.load()
   }
 
-  async mounted () {
+  mounted () {
     this.isEdited = false
     this.codemirror.setSize('100%', '100%')
     this.codemirror.addKeyMap({
       'Cmd-S': () => { this.save() },
       'Ctrl-S': () => { this.save() }
+    })
+
+    this.codemirror.on('cursorActivity', (instance) => {
+      this.cursor = instance.getCursor().line
     })
 
     this.codemirror.on('paste', async (ins, evt) => {
@@ -176,7 +186,9 @@ export default class PostEdit extends Vue {
   async getFilteredTags (s: string) {
     if (!this.data) {
       this.data = (await api.post('/api/post/', {
-        q: { tag: { $exists: true } },
+        q: {
+          tag: { $exists: true }
+        },
         limit: null,
         projection: { tag: 1 }
       })).data.data
@@ -194,13 +206,12 @@ export default class PostEdit extends Vue {
     this.isShowHeader = false
     this.isLoading = true
 
-    const id = normalizeArray(this.$route.query.id)
     this.guid = Math.random().toString(36).substr(2)
 
-    if (id) {
+    if (this.id) {
       const r = (await api.get('/api/post/', {
         params: {
-          id
+          id: this.id
         }
       }))
 
@@ -234,37 +245,35 @@ export default class PostEdit extends Vue {
     const id = normalizeArray(this.$route.query.id)
     const { data: header = {} } = matter(this.markdown)
 
+    const content = {
+      type: this.type,
+      tag: this.tag,
+      title: this.title,
+      date: (this.type !== 'reveal' && this.date) ? this.date.toISOString() : undefined,
+      excerpt: this.excerptHtml,
+      remaining: this.type === 'reveal' ? '' : this.remainingHtml,
+      raw: this.markdown,
+      header
+    }
+
     if (!id) {
       /**
        * Create a post
        */
       const r = await api.put('/api/post/', {
-        slug: this.slug,
-        tag: this.tag,
-        title: this.title,
-        date: this.date.toISOString(),
-        excerpt: this.excerptHtml,
-        remaining: this.remainingHtml,
-        raw: this.markdown,
-        header
+        ...content,
+        slug: this.slug
       })
 
       this.$router.push({
         query: {
-          id: r.data._id
+          id: r.data.id
         }
       })
     } else {
       await api.patch('/api/post/', {
         id,
-        update: {
-          tag: this.tag,
-          title: this.title,
-          date: this.date.toISOString(),
-          excerpt: this.excerptHtml,
-          remaining: this.remainingHtml,
-          header
-        }
+        update: content
       })
     }
 
@@ -275,16 +284,22 @@ export default class PostEdit extends Vue {
     }, 100)
   }
 
-  onCmCodeChange (newCode: string) {
-    this.isEdited = true
-    this.isShowRemaining = true
-    this.isShowHeader = false
+  @Watch('hasPreview')
+  onCmCodeChange () {
+    if (this.hasPreview) {
+      this.isEdited = true
+      this.isShowHeader = false
 
-    // @ts-ignore
-    const [excerpt, remaining = ''] = newCode.split(process.env.VUE_APP_MATTER_EXCERPT_SEPARATOR!)
+      // @ts-ignore
+      const [excerpt, remaining = ''] = this.markdown.split(process.env.VUE_APP_MATTER_EXCERPT_SEPARATOR!)
 
-    this.excerptHtml = this.makeHtml.parse(excerpt)
-    this.remainingHtml = remaining.trim() ? this.makeHtml.parse(remaining) : ''
+      this.excerptHtml = this.makeHtml.parse(excerpt, false)
+      this.remainingHtml = remaining.trim() ? this.makeHtml.parse(remaining, false) : ''
+
+      this.$nextTick(() => {
+        this.makeHtml.activate()
+      })
+    }
   }
 
   generateSlug () {
@@ -297,6 +312,23 @@ export default class PostEdit extends Vue {
 </script>
 
 <style lang="scss">
+.header-buttons {
+  margin-bottom: 0;
+
+  .button {
+    margin-bottom: 0;
+  }
+}
+
+.editor {
+  margin-top: 1em;
+  min-height: 90vh;
+}
+
+.editor-for-iframe {
+  height: 90vh;
+}
+
 .vue-codemirror {
   display: grid;
 }
@@ -307,11 +339,5 @@ export default class PostEdit extends Vue {
 
 .CodeMirror-line {
   word-break: break-all !important;
-}
-
-iframe {
-  display: block;
-  width: 100%;
-  max-width: 500px;
 }
 </style>

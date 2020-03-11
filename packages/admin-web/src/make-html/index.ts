@@ -2,15 +2,20 @@ import showdown from 'showdown'
 import HyperPug from 'hyperpug'
 import stylis from 'stylis'
 import h from 'hyperscript'
-import matter from 'gray-matter'
 
 export default class MakeHtml {
-  md = new showdown.Converter()
+  md = new showdown.Converter({
+    metadata: true
+  })
+
   hp: HyperPug
 
   html = ''
 
-  constructor (public id = 'el-' + Math.random().toString(36).substr(2)) {
+  constructor (
+    public isEdit?: boolean,
+    public id = 'el-' + Math.random().toString(36).substr(2)
+  ) {
     this.md.addExtension({
       type: 'lang',
       regex: /\n```pug parsed\n(.+)\n```\n/gs,
@@ -33,30 +38,56 @@ export default class MakeHtml {
     })
   }
 
-  parse (s: string) {
+  parse (s: string, autoActivate = false) {
     try {
-      this.html = this.mdConvert(matter(s).content)
+      this.html = this.mdConvert(s)
     } catch (e) {}
 
-    setTimeout(() => {
-      const el = document.getElementById(this.id)
-      if (el) {
-        Array.from(el.getElementsByTagName('style')).map((style) => {
-          const content = style.getAttribute('data-content')
-          if (content) {
-            style.innerHTML = content
-            style.removeAttribute('data-content')
-          }
-        })
-      }
-    }, 100)
+    if (autoActivate) {
+      setTimeout(() => {
+        this.activate()
+      }, 100)
+    }
 
     const output = h('div', {
-      id: this.id,
+      className: this.id,
       innerHTML: this.html
     }).outerHTML
 
     return output
+  }
+
+  activate () {
+    document.querySelectorAll(`.${this.id}`).forEach((mainEl) => {
+      Array.from(mainEl.getElementsByTagName('reveal')).map((el) => {
+        el.replaceWith(Object.assign(document.createElement('iframe'), {
+          className: 'reveal-viewer',
+          src: `/reveal.html?id=${el.innerHTML}`
+        }))
+      })
+
+      Array.from(mainEl.getElementsByTagName('pdf')).map((el) => {
+        if (el.hasAttribute('google-drive')) {
+          el.replaceWith(Object.assign(document.createElement('iframe'), {
+            className: 'pdf-viewer google-drive',
+            src: `https://drive.google.com/file/d/${el.innerHTML}/preview`
+          }))
+        } else {
+          el.replaceWith(Object.assign(document.createElement('iframe'), {
+            className: 'pdf-viewer',
+            src: el.innerHTML
+          }))
+        }
+      })
+
+      Array.from(mainEl.getElementsByTagName('style')).map((el) => {
+        const content = el.getAttribute('data-content')
+        if (content) {
+          el.innerHTML = content
+          el.removeAttribute('data-content')
+        }
+      })
+    })
   }
 
   pugConvert (s: string) {
@@ -70,7 +101,7 @@ export default class MakeHtml {
   makeCss (s: string) {
     return h('style', {
       attrs: {
-        'data-content': stylis(`#${this.id}`, s)
+        'data-content': stylis(`.${this.id}`, s)
       }
     }).outerHTML
   }

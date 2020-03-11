@@ -13,6 +13,7 @@ export class Post {
   @prop({ required: true }) excerpt!: string
   @prop({ default: '' }) remaining?: string
   @prop({ required: true }) raw!: string
+  @prop() type?: string
 }
 
 export const PostModel = getModelForClass(Post, { schemaOptions: { timestamps: true } })
