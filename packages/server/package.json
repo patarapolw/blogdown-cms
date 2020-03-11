@@ -1,0 +1,43 @@
+{
+  "name": "@blogdown-cms/server",
+  "private": true,
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -P src/tsconfig.json",
+    "dev": "ts-node-dev src/index.ts",
+    "preinstall": "node ../../use-npm.js"
+  },
+  "dependencies": {
+    "@typegoose/typegoose": "^6.2.2",
+    "cloudinary": "^1.19.0",
+    "dayjs": "^1.8.19",
+    "dotenv": "^8.2.0",
+    "fastify": "^2.12.1",
+    "fastify-multipart": "^1.0.5",
+    "fastify-oas": "^2.5.2",
+    "fastify-static": "^2.6.0",
+    "fs-extra": "^8.1.0",
+    "mongoose": "^5.8.9",
+    "nanoid": "^2.1.10",
+    "pump": "^3.0.0",
+    "runtypes": "^4.2.0",
+    "seo-friendly-slugify": "^1.0.5"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^8.1.0",
+    "@types/mongoose": "^5.5.43",
+    "@types/nanoid": "^2.1.0",
+    "@types/node": "^13.9.0",
+    "@types/pump": "^1.1.0",
+    "fastify-cors": "^3.0.2",
+    "js-yaml": "^3.13.1",
+    "ts-node-dev": "^1.0.0-pre.44",
+    "typescript": "^3.8.3"
+  },
+  "engines": {
+    "node": "12.x",
+    "npm": "6.x"
+  }
+}

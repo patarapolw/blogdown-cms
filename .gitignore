@@ -1,7 +1,6 @@
 node_modules
 dist
 yarn-error.log
-/user/media/**/*.*
-!/user/media/.gitkeep
-/config.json
 .env
+/config.yaml
+/heroku-dist/

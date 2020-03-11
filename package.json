@@ -1,38 +1,21 @@
 {
   "name": "blogdown-cms",
   "version": "1.0.0",
-  "main": "index.js",
   "license": "MIT",
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
-  "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^2.12.0",
-    "@typescript-eslint/parser": "^2.12.0",
-    "@vue/eslint-config-standard": "^5.0.1",
-    "@vue/eslint-config-typescript": "^5.0.1",
-    "eslint": ">=6.2.2",
-    "eslint-config-standard": "^14.1.0",
-    "eslint-plugin-import": ">=2.18.0",
-    "eslint-plugin-node": ">=9.1.0",
-    "eslint-plugin-promise": ">=4.2.1",
-    "eslint-plugin-standard": ">=4.0.0",
-    "eslint-plugin-vue": "^6.0.1",
-    "gh-pages": "^2.2.0",
-    "lerna": "^3.19.0",
-    "readline-sync": "^1.4.10",
-    "typescript": "~3.5.3",
-    "vue-eslint-parser": "^7.0.0"
-  },
   "scripts": {
-    "start": "cd packages/admin && yarn local:start",
-    "dev": "lerna run local:dev --parallel",
-    "build": "lerna run build",
-    "publish-api": "cd packages/admin-api && yarn publish",
-    "lint": "eslint '**'",
-    "first-time": "node ./init.js",
-    "postinstall": "node ./init.js",
-    "deploy": "node ./deploy.js"
+    "preinstall": "node use-npm.js"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^2.23.0",
+    "@typescript-eslint/parser": "^2.23.0",
+    "eslint": "^6.8.0",
+    "eslint-config-standard": "^14.1.0",
+    "eslint-plugin-import": "^2.20.1",
+    "eslint-plugin-node": "^11.0.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
+    "eslint-plugin-vue": "^6.2.2",
+    "typescript": "^3.8.3"
   }
 }
