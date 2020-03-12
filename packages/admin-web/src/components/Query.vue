@@ -48,7 +48,7 @@
         template(slot="detail" slot-scope="props")
           .container(style="max-width: 800px; max-height: 300px; overflow: scroll;")
             .content(
-              v-html="preview(props.row.excerpt)"
+              v-html="props.row.excerpt"
               style="max-height: 300px; overflow: scroll"
               @click="openItem(props.row.id)"
             )
@@ -73,7 +73,6 @@
 import { Component, Vue, Watch, Prop } from 'vue-property-decorator'
 import dayjs from 'dayjs'
 
-import MakeHtml from '../make-html'
 import api from '../api'
 import { normalizeArray } from '../utils'
 
@@ -209,11 +208,6 @@ export default class Query extends Vue {
       this.filteredTags = this.allTags
         .filter((t) => s.startsWith(t))
     }
-  }
-
-  preview (s: string) {
-    const makeHtml = new MakeHtml(true)
-    return makeHtml.parse(s)
   }
 
   openItem (id: string) {

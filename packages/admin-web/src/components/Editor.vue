@@ -298,10 +298,10 @@ export default class Editor extends Vue {
 
 <style lang="scss">
 .header-buttons {
-  margin-bottom: 0;
+  margin-bottom: 0 !important;
 
   .button {
-    margin-bottom: 0;
+    margin-bottom: 0 !important;
   }
 }
 

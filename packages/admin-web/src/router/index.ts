@@ -28,10 +28,6 @@ const router = new VueRouter({
       component: () => import('../components/Editor.vue'),
       props: { type: 'reveal' }
     }
-    // {
-    //   path: '/comments',
-    //   component: () => import(/* webpackChunkName: "Comments" */ '../views/Comments.vue'),
-    // },
   ]
 })
 

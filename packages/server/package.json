@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc -P src/tsconfig.json",
+    "build": "webpack",
     "dev": "ts-node-dev src/index.ts",
     "preinstall": "node ../../use-npm.js"
   },
@@ -35,8 +35,12 @@
     "@types/pump": "^1.1.0",
     "fastify-cors": "^3.0.2",
     "js-yaml": "^3.13.1",
+    "ts-loader": "^6.2.1",
     "ts-node-dev": "^1.0.0-pre.44",
-    "typescript": "^3.8.3"
+    "typescript": "^3.8.3",
+    "webpack": "^4.42.0",
+    "webpack-cli": "^3.3.11",
+    "webpack-node-externals": "^1.7.2"
   },
   "engines": {
     "node": "12.x",

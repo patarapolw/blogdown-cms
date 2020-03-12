@@ -1,8 +1,7 @@
 /// <reference path="./reveal.d.ts" />
 import matter from 'gray-matter'
 import { Serialize } from 'any-serialize'
-
-import MakeHtml from './make-html'
+import MakeHtml from '@patarapolw/blogdown-make-html'
 
 import './reveal.scss'
 
@@ -17,18 +16,11 @@ declare global {
   }
 }
 
-export interface ISlide {
-  id: string
-  type: 'hidden' | 'global' | 'regular'
-  html: string
-  raw: string
-}
-
 export class RevealMd {
   _headers: RevealOptions | null = null
   _queue: Array<(r?: RevealStatic) => void> = []
   _markdown: string = ''
-  _raw: ISlide[][] = [[]]
+  _raw: Element[][] = [[]]
 
   defaults = {
     reveal: {
@@ -162,63 +154,35 @@ export class RevealMd {
   }
 
   set markdown (s: string) {
-    const globalEl = document.getElementById('global') as HTMLDivElement
-    Array.from(globalEl.querySelectorAll('style.ref')).map((el) => el.remove())
-
-    let xOffset = 0
-    const newRaw = s.split(/\r?\n(?:===|---)\r?\n/g).map((el, x) => {
-      this._raw[x] = this._raw[x] || []
-      const newRawSs = el.split(/\r?\n--\r?\n/g).map((ss) => this.parseSlide(ss))
-      if (newRawSs.every((ss) => !ss.html)) {
-        xOffset++
-      }
-
-      x -= xOffset
-
-      let yOffset = 0
-      return newRawSs.map((thisRaw, y) => {
-        if (!thisRaw.html) {
-          yOffset++
-          return
-        }
-
-        y -= yOffset
-
+    const newRaw = s.split('\n===\n').map((el, x) => {
+      return el.split('\n--\n').map((ss, y) => {
         let section = this.getSlide(x)
         let subSection = this.getSlide(x, y)
 
-        if (!this._raw[x][y] || (this._raw[x][y] && this._raw[x][y].raw !== thisRaw.raw)) {
-          const container = document.createElement('div')
-          container.className = 'container'
-          container.innerHTML = thisRaw.html
+        if (section && subSection) {
+          this.parseSlide(subSection, ss)
+        } else {
+          subSection = document.createElement('section')
+          this.parseSlide(subSection, ss)
 
-          if (section && subSection) {
-            const oldContainers = subSection.getElementsByClassName('container')
-            Array.from(oldContainers).forEach((el) => el.remove())
-            subSection.appendChild(container)
+          if (section) {
+            section.appendChild(subSection)
           } else {
-            subSection = document.createElement('section')
-            subSection.append(container)
-
-            if (section) {
-              section.appendChild(subSection)
-            } else {
-              section = document.createElement('section')
-              section.appendChild(subSection)
-              document.querySelector('.reveal .slides')!.appendChild(section)
-            }
+            section = document.createElement('section')
+            section.appendChild(subSection)
+            document.querySelector('.reveal .slides')!.appendChild(section)
           }
-
-          Array.from(container.querySelectorAll('pre code:not(.hljs)')).forEach((el) => {
-            if (window.hljs) {
-              window.hljs.highlightBlock(el)
-            }
-          })
         }
 
-        return thisRaw
+        Array.from(subSection.querySelectorAll('pre code:not(.hljs)')).forEach((el) => {
+          if (window.hljs) {
+            window.hljs.highlightBlock(el)
+          }
+        })
+
+        return subSection
       }).filter((el) => el)
-    }).filter((el) => el && el.length > 0) as ISlide[][]
+    }).filter((el) => el && el.length > 0) as Element[][]
 
     this._raw.map((el, x) => {
       el.map((ss, j) => {
@@ -316,35 +280,10 @@ export class RevealMd {
     }
   }
 
-  parseSlide (text: string): ISlide {
+  parseSlide (dom: Element, text: string) {
     const id = 'slide-' + ser.hash(text)
-    const raw = text
-    let type: 'hidden' | 'global' | 'regular' = 'regular'
-    let html = text
-    const [firstLine, ...lines] = html.split('\n')
-    const newType = firstLine.substr(3)
-    if (newType === 'hidden') {
-      type = 'hidden'
-      return { html: '', raw, id, type }
-    } else if (newType === 'global') {
-      type = 'global'
-      html = lines.join('\n')
-    }
-
-    const maker = new MakeHtml(true)
-    html = maker.parse(html)
-
-    if (type === 'global') {
-      document.body.insertAdjacentHTML('beforeend', html)
-      return { html: '', raw, id, type }
-    }
-
-    return {
-      html,
-      raw,
-      id,
-      type
-    }
+    const maker = new MakeHtml(id)
+    maker.render(dom, text)
   }
 
   getSlide (x: number, y?: number) {
