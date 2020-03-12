@@ -25,7 +25,7 @@ import router from './router'
 
   const port = parseInt(process.env.PORT || (config.port || 24000).toString())
 
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.ADMIN) {
     app.register(require('fastify-cors'))
   }
 

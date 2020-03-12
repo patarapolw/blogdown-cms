@@ -25,7 +25,7 @@ const configSchema = Record({
 
 export let config: Static<typeof configSchema>
 
-if (process.env.NODE_ENV === 'development') {
+if (process.env.ADMIN) {
   config = configSchema.check(require('js-yaml').safeLoad(fs.readFileSync(
     path.join(__dirname, '../../../config.yaml'),
     'utf8'

@@ -2,7 +2,7 @@ import axios from 'axios'
 import { SnackbarProgrammatic as Snackbar, LoadingProgrammatic as Loading } from 'buefy'
 
 const api = axios.create({
-  baseURL: process.env.NODE_ENV === 'development' ? `http://localhost:${process.env.VUE_APP_SERVER_PORT}` : '/'
+  baseURL: `http://localhost:${process.env.VUE_APP_SERVER_PORT}`
 })
 
 export let loading: {

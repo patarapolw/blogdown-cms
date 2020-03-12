@@ -13,9 +13,9 @@ This project uses the following endpoints
 - Cloudinary is used to store media (e.g. images)
 - Editing is only enabled offline
   - via `npm run dev`
-  - or `NODE_ENV=development`
+  - or `ADMIN=1`
 
 ## Admin mode
 
-- Run the server in `NODE_ENV=development`, by `cd packages/server && npm run dev`
+- Run the server in `ADMIN=1`, by `cd packages/server && npm run dev`
 - In another terminal, run `cd packages/admin-web && npm run dev`
