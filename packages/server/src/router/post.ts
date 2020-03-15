@@ -116,166 +116,168 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
     }
   })
 
-  f.patch('/', {
-    schema: {
-      tags: ['post'],
-      summary: 'Update post',
-      body: {
-        type: 'object',
-        required: ['id', 'update'],
-        properties: {
-          id: { type: 'string' },
-          update: { type: 'object' }
+  if (process.env.ADMIN) {
+    f.patch('/', {
+      schema: {
+        tags: ['post'],
+        summary: 'Update post',
+        body: {
+          type: 'object',
+          required: ['id', 'update'],
+          properties: {
+            id: { type: 'string' },
+            update: { type: 'object' }
+          }
         }
       }
-    }
-  }, async (req) => {
-    const { id, update } = req.body
+    }, async (req) => {
+      const { id, update } = req.body
 
-    await PostModel.updateOne({ _id: String.check(id) }, {
-      $set: update
-    })
-
-    return {
-      success: true
-    }
-  })
-
-  f.put('/', {
-    schema: {
-      tags: ['post'],
-      summary: 'Create post',
-      body: {
-        type: 'object',
-        properties: {
-          date: { type: 'string' }
-        }
-      }
-    }
-  }, async (req) => {
-    const { date, slug, ...p } = req.body
-    const { id } = await PostModel.create({
-      ...p,
-      _id: slug || `${(() => {
-        const s = slugify.slugify(p.title)
-        return s ? `${s}-` : ''
-      })()}${Math.random().toString(36).substr(2)}`,
-      date: date ? new Date(date) : undefined
-    } as Post)
-
-    return { id }
-  })
-
-  f.delete('/', {
-    schema: {
-      tags: ['post'],
-      summary: 'Delete post',
-      querystring: {
-        id: { type: 'string' }
-      },
-      body: {
-        type: 'object',
-        properties: {
-          q: { type: 'object' }
-        }
-      }
-    }
-  }, async (req, reply) => {
-    if (req.query.id) {
-      await PostModel.deleteOne({
-        _id: req.query.id
+      await PostModel.updateOne({ _id: String.check(id) }, {
+        $set: update
       })
 
       return {
         success: true
       }
-    } else if (req.body && req.body.q) {
-      await PostModel.deleteMany(req.body.q)
+    })
+
+    f.put('/', {
+      schema: {
+        tags: ['post'],
+        summary: 'Create post',
+        body: {
+          type: 'object',
+          properties: {
+            date: { type: 'string' }
+          }
+        }
+      }
+    }, async (req) => {
+      const { date, slug, ...p } = req.body
+      const { id } = await PostModel.create({
+        ...p,
+        _id: slug || `${(() => {
+          const s = slugify.slugify(p.title)
+          return s ? `${s}-` : ''
+        })()}${Math.random().toString(36).substr(2)}`,
+        date: date ? new Date(date) : undefined
+      } as Post)
+
+      return { id }
+    })
+
+    f.delete('/', {
+      schema: {
+        tags: ['post'],
+        summary: 'Delete post',
+        querystring: {
+          id: { type: 'string' }
+        },
+        body: {
+          type: 'object',
+          properties: {
+            q: { type: 'object' }
+          }
+        }
+      }
+    }, async (req, reply) => {
+      if (req.query.id) {
+        await PostModel.deleteOne({
+          _id: req.query.id
+        })
+
+        return {
+          success: true
+        }
+      } else if (req.body && req.body.q) {
+        await PostModel.deleteMany(req.body.q)
+
+        return {
+          success: true
+        }
+      }
+
+      reply.code(400)
+      return {
+        error: 'Either req.query.id or req.body.q must be provided'
+      }
+    })
+
+    f.put('/tag', {
+      schema: {
+        tags: ['post'],
+        summary: 'Replace post tags',
+        body: {
+          type: 'object',
+          required: ['ids', 'tags'],
+          properties: {
+            ids: { type: 'array', items: { type: 'string' } },
+            tags: { type: 'array', items: { type: 'string' } }
+          }
+        }
+      }
+    }, async (req) => {
+      const { ids, tags } = req.body
+      await PostModel.updateMany({
+        _id: { $in: Array(String).check(ids) }
+      }, {
+        $set: { tag: Array(String).check(tags) }
+      })
 
       return {
         success: true
       }
-    }
-
-    reply.code(400)
-    return {
-      error: 'Either req.query.id or req.body.q must be provided'
-    }
-  })
-
-  f.put('/tag', {
-    schema: {
-      tags: ['post'],
-      summary: 'Replace post tags',
-      body: {
-        type: 'object',
-        required: ['ids', 'tags'],
-        properties: {
-          ids: { type: 'array', items: { type: 'string' } },
-          tags: { type: 'array', items: { type: 'string' } }
-        }
-      }
-    }
-  }, async (req) => {
-    const { ids, tags } = req.body
-    await PostModel.updateMany({
-      _id: { $in: Array(String).check(ids) }
-    }, {
-      $set: { tag: Array(String).check(tags) }
     })
 
-    return {
-      success: true
-    }
-  })
-
-  f.patch('/tag', {
-    schema: {
-      tags: ['post'],
-      summary: 'Update post tags',
-      body: {
-        type: 'object',
-        required: ['ids', 'tags'],
-        properties: {
-          ids: { type: 'array', items: { type: 'string' } },
-          tags: { type: 'array', items: { type: 'string' } }
+    f.patch('/tag', {
+      schema: {
+        tags: ['post'],
+        summary: 'Update post tags',
+        body: {
+          type: 'object',
+          required: ['ids', 'tags'],
+          properties: {
+            ids: { type: 'array', items: { type: 'string' } },
+            tags: { type: 'array', items: { type: 'string' } }
+          }
         }
       }
-    }
-  }, async (req) => {
-    const { ids, tags } = req.body
-    await PostModel.updateMany({
-      _id: { $in: Array(String).check(ids) }
-    }, {
-      $addToSet: { tag: { $each: Array(String).check(tags) } }
+    }, async (req) => {
+      const { ids, tags } = req.body
+      await PostModel.updateMany({
+        _id: { $in: Array(String).check(ids) }
+      }, {
+        $addToSet: { tag: { $each: Array(String).check(tags) } }
+      })
+
+      return {
+        success: true
+      }
     })
 
-    return {
-      success: true
-    }
-  })
-
-  f.delete('/tag', {
-    schema: {
-      tags: ['post'],
-      summary: 'Delete post tags',
-      body: {
-        type: 'object',
-        required: ['ids', 'tags'],
-        properties: {
-          ids: { type: 'array', items: { type: 'string' } },
-          tags: { type: 'array', items: { type: 'string' } }
+    f.delete('/tag', {
+      schema: {
+        tags: ['post'],
+        summary: 'Delete post tags',
+        body: {
+          type: 'object',
+          required: ['ids', 'tags'],
+          properties: {
+            ids: { type: 'array', items: { type: 'string' } },
+            tags: { type: 'array', items: { type: 'string' } }
+          }
         }
       }
-    }
-  }, async (req) => {
-    const { ids, tags } = req.body
-    await PostModel.updateMany({
-      _id: { $in: Array(String).check(ids) }
-    }, {
-      $pullAll: { tag: Array(String).check(tags) }
+    }, async (req) => {
+      const { ids, tags } = req.body
+      await PostModel.updateMany({
+        _id: { $in: Array(String).check(ids) }
+      }, {
+        $pullAll: { tag: Array(String).check(tags) }
+      })
     })
-  })
+  }
 
   next()
 }

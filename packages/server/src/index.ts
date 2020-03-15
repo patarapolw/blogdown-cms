@@ -27,17 +27,15 @@ import router from './router'
 
   if (process.env.ADMIN) {
     app.register(require('fastify-cors'))
+    app.register(fastifyStatic, {
+      root: path.join(__dirname, '../../admin-web/dist')
+    })
+    app.get('*', (req, reply) => {
+      reply.sendFile('index.html')
+    })
   }
 
   app.register(router, { prefix: '/api' })
-
-  app.register(fastifyStatic, {
-    root: path.join(__dirname, '../../admin-web/dist')
-  })
-
-  app.get('*', (req, reply) => {
-    reply.sendFile('index.html')
-  })
 
   app.listen(port, (err) => {
     if (err) {

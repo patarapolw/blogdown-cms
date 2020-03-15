@@ -158,10 +158,8 @@ export default class Editor extends Vue {
 
             const cursor = ins.getCursor()
 
-            const r = await api.post('/api/media/upload', formData)
-            const url = `/api/media/${r.data.type}/${r.data.filename}`
-
-            ins.getDoc().replaceRange(`![${r.data.filename}](${url} local)`, cursor)
+            const { data: r } = await api.post('/api/media/upload', formData)
+            ins.getDoc().replaceRange(`![${r.filename}](${r.url} local)`, cursor)
           }
         }
       }

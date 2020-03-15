@@ -17,8 +17,7 @@ const router = (f: FastifyInstance, opts: any, next: () => void) => {
       produces: ['application/json'],
       tags: [
         { name: 'media', description: 'Media related endpoints' },
-        { name: 'post', description: 'Post related endpoints' },
-        { name: 'comment', description: 'Comment related endpoints' }
+        { name: 'post', description: 'Post related endpoints' }
       ],
       components: {
         securitySchemes: {
@@ -36,7 +35,10 @@ const router = (f: FastifyInstance, opts: any, next: () => void) => {
     exposeRoute: true
   })
 
-  f.register(mediaRouter, { prefix: '/media' })
+  if (process.env.ADMIN) {
+    f.register(mediaRouter, { prefix: '/media' })
+  }
+
   f.register(postRouter, { prefix: '/post' })
   next()
 }

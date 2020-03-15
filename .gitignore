@@ -3,4 +3,4 @@ dist
 yarn-error.log
 .env
 /config.yaml
-/heroku-dist/
+/tmp/

@@ -6,7 +6,6 @@ import { FastifyInstance } from 'fastify'
 import fileUpload from 'fastify-file-upload'
 import dayjs from 'dayjs'
 import cloudinary from 'cloudinary'
-import { String } from 'runtypes'
 
 import { config } from '../config'
 
@@ -83,13 +82,14 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
 
     const bucket = (buckets as any)[type]
 
-    await cloudinary.v2.uploader.upload(path.join(tmp, filename), {
+    const r = await cloudinary.v2.uploader.upload(path.join(tmp, filename), {
       public_id: joinPath(bucket, filename)
     })
 
     return {
       filename,
-      type
+      type,
+      url: r.secure_url
     }
   })
 
