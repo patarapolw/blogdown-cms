@@ -53,3 +53,6 @@ if (process.env.ADMIN) {
 }
 
 fs.mkdirpSync(config.cloudinary.tmp)
+fs.writeFileSync(path.join(config.cloudinary.tmp, '.gitignore'), `*.*
+!.gitignore
+`)
