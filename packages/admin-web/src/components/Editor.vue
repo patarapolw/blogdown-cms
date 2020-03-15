@@ -1,7 +1,10 @@
 <template lang="pug">
 .container
   .columns.editor(:class="type === 'reveal' ? 'editor-for-iframe' : 'editor-for-regular'")
-    .column(:style="type === 'reveal' ? 'overflow-y: scroll;' : ''")
+    .column(
+      :style="type === 'reveal' ? 'overflow-y: scroll;' : ''"
+      :class="hasPreview ? 'is-6' : 'is-12'"
+    )
       b-collapse.card(:open.sync="isShowHeader" aria-id="header" style="margin-bottom: 1em;")
         .card-header(slot="trigger" slot-scope="props" role="button" aria-controls="header" style="align-items: center;")
           p.card-header-title
@@ -40,7 +43,7 @@
           b-field(v-if="type !== 'reveal'")
             b-switch(v-model="isDraft") Draft
       codemirror(v-model="markdown" ref="codemirror" @input="onCmCodeChange")
-    .column(v-if="hasPreview")
+    .column.is-6(v-if="hasPreview")
       RevealPreview(v-if="type === 'reveal'" :id="id" :markdown="markdown" :cursor="cursor")
       EditorPreview(v-else :title="title" :id="id" :markdown="markdown"
         @excerpt="excerptHtml = $event" @remaining="remainingHtml = $event"
@@ -151,6 +154,7 @@ export default class Editor extends Vue {
             const blob: File = item.getAsFile()
             const formData = new FormData()
             formData.append('file', blob)
+            formData.append('type', 'admin')
 
             const cursor = ins.getCursor()
 

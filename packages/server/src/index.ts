@@ -32,7 +32,7 @@ import router from './router'
   app.register(router, { prefix: '/api' })
 
   app.register(fastifyStatic, {
-    root: path.join(__dirname, 'public')
+    root: path.join(__dirname, '../../admin-web/dist')
   })
 
   app.get('*', (req, reply) => {

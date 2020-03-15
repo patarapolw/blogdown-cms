@@ -2,10 +2,11 @@ import fs from 'fs'
 import path from 'path'
 
 import { FastifyInstance } from 'fastify'
-import multipart from 'fastify-multipart'
-import pump from 'pump'
+// @ts-ignore
+import fileUpload from 'fastify-file-upload'
 import dayjs from 'dayjs'
 import cloudinary from 'cloudinary'
+import { String } from 'runtypes'
 
 import { config } from '../config'
 
@@ -44,7 +45,7 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
     )
   })
 
-  f.register(multipart)
+  f.register(fileUpload)
 
   f.post('/upload', {
     schema: {
@@ -54,53 +55,42 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
         type: 'object',
         required: ['file', 'type'],
         properties: {
-          file: { type: 'array', items: { type: 'object' }, minItems: 1, maxItems: 1 },
-          type: { type: 'string', enum: ['admin', 'client'] }
+          file: { type: 'object' },
+          type: { type: 'string' }
         }
       }
     }
-  }, (req, reply) => {
-    if (!req.isMultipart()) {
-      reply.code(400).send(new Error('Request is not multipart'))
-      return
+  }, async (req) => {
+    const { file, type } = req.body
+
+    let filename = file.name
+    if (filename === 'image.png') {
+      filename = dayjs().format('YYYYMMDD-HHmm') + '.png'
     }
 
-    const { type } = req.body
+    filename = (() => {
+      const originalFilename = filename
 
-    let filename = ''
-
-    req.multipart((field, file, filename_) => {
-      filename = filename_
-      if (filename === 'image.png') {
-        filename = dayjs().format('YYYYMMDD-HHmm') + '.png'
+      while (fs.existsSync(path.resolve(tmp, filename))) {
+        const [base, ext] = originalFilename.split(/(\.[a-z]+)$/i)
+        filename = base + '-' + Math.random().toString(36).substr(2) + (ext || '.png')
       }
 
-      filename = (() => {
-        const originalFilename = filename
+      return filename
+    })()
 
-        while (fs.existsSync(path.resolve(tmp, filename))) {
-          const [base, ext] = originalFilename.split(/(\.[a-z]+)$/i)
-          filename = base + '-' + Math.random().toString(36).substr(2) + (ext || '.png')
-        }
+    file.mv(path.join(tmp, filename))
 
-        return filename
-      })()
+    const bucket = (buckets as any)[type]
 
-      const stream = fs.createWriteStream(path.join(tmp, filename))
-
-      pump(file, stream)
-    }, () => {
-      const bucket = (buckets as any)[type]
-
-      cloudinary.v2.uploader.upload(path.join(tmp, name), {
-        public_id: joinPath(bucket, filename)
-      }).then(() => {
-        reply.code(200).send({
-          filename,
-          type
-        })
-      })
+    await cloudinary.v2.uploader.upload(path.join(tmp, filename), {
+      public_id: joinPath(bucket, filename)
     })
+
+    return {
+      filename,
+      type
+    }
   })
 
   f.get('/:type/:filename', {

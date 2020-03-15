@@ -5,7 +5,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "prepack": "tsc",
+    "preinstall": "is-npm",
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -19,11 +20,14 @@
   "license": "MIT",
   "dependencies": {
     "any-serialize": "^1.4.12",
+    "highlight.js": "^9.18.1",
+    "highlightjs-vue": "git+https://github.com/patarapolw/highlightjs-vue.git",
     "hyperpug": "^1.1.1",
     "showdown": "^1.9.1",
     "stylis": "^3.5.4"
   },
   "devDependencies": {
+    "@types/highlight.js": "^9.12.3",
     "@types/node": "^13.9.0",
     "@types/showdown": "^1.9.3",
     "htmlparser2": "^4.1.0",

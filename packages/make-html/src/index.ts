@@ -1,6 +1,11 @@
 import showdown from 'showdown'
 import HyperPug from 'hyperpug'
 import stylis from 'stylis'
+import hljs from 'highlight.js'
+import { elementOpen, elementClose, patch } from 'incremental-dom'
+import { makeIncremental } from './make-incremental'
+import hljsDefineVue from 'highlightjs-vue'
+hljsDefineVue(hljs)
 
 export default class MakeHtml {
   md = new showdown.Converter({
@@ -41,9 +46,6 @@ export default class MakeHtml {
       this.html = this.mdConvert(s)
     } catch (e) {}
 
-    const { elementOpen, elementClose, patch } = require('incremental-dom')
-    const { makeIncremental } = require('./make-incremental')
-
     try {
       patch(dom, () => {
         try {
@@ -72,7 +74,34 @@ export default class MakeHtml {
   }
 
   mdConvert (s: string) {
-    return this.md.makeHtml(s)
+    const html = this.md.makeHtml(s)
+    const body = document.createElement('body')
+    body.innerHTML = html
+
+    body.querySelectorAll('reveal').forEach((el) => {
+      const src = el.getAttribute('src') || ''
+
+      el.replaceWith(Object.assign(document.createElement('iframe'), {
+        src: `/reveal.html?id=${src}`,
+        className: 'reveal-viewer'
+      }))
+    })
+
+    body.querySelectorAll('pdf').forEach((el) => {
+      const src = el.getAttribute('src') || ''
+      const type = el.getAttribute('type')
+
+      el.replaceWith(Object.assign(document.createElement('iframe'), {
+        src: type === 'google-drive' ? `https://drive.google.com/file/d/${src}/preview` : src,
+        className: 'pdf-viewer'
+      }))
+    })
+
+    body.querySelectorAll('pre code').forEach((el) => {
+      hljs.highlightBlock(el)
+    })
+
+    return body.innerHTML
   }
 
   makeCss (s: string) {
