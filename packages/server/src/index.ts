@@ -37,9 +37,13 @@ import router from './router'
 
   app.register(router, { prefix: '/api' })
 
-  app.listen(port, (err) => {
-    if (err) {
-      throw err
+  app.listen(
+    port,
+    process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1',
+    (err) => {
+      if (err) {
+        throw err
+      }
     }
-  })
+  )
 })().catch(console.error)
