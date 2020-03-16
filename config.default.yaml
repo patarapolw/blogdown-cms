@@ -1,0 +1,13 @@
+port: 24000  # This isn't really needed, but may help when running API locally.
+grayMatter:
+  excerptSeparator: <!-- excerpt_separator -->
+mongo:
+  uri: 'Please provide your MONGO_URI. This will not be uploaded to Heroku.'
+cloudinary:
+  buckets:
+    admin: blogdown/
+    client: user/
+  apiKey: ''
+  apiSecret: ''
+  cloudName: ''
+  tmp: /Users/patarapolw/GitHubProjects/blogdown-cms/heroku-dist/public/media

@@ -1,9 +1,0 @@
-{
-  "port": 48000,
-  "grayMatter": {
-    "excerptSeparator": "<!-- excerpt_separator -->"
-  },
-  "cloudinary": {
-    "prefix": "blogdown/"
-  }
-}

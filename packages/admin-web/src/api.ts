@@ -1,12 +1,8 @@
-import axios from '@typed-rest/axios'
+import axios from 'axios'
 import { SnackbarProgrammatic as Snackbar, LoadingProgrammatic as Loading } from 'buefy'
-import { IPostsApi, IMediaApi } from '@blogdown-cms/admin-api'
 
-const api = axios.create<IPostsApi & IMediaApi>({
-  baseURL: process.env.NODE_ENV === 'development' ? `http://localhost:${process.env.VUE_APP_SERVER_PORT}` : '/',
-  // validateStatus (status) {
-  //   return status >= 200 && status < 300  // default
-  // },
+const api = axios.create({
+  baseURL: `http://localhost:${process.env.VUE_APP_SERVER_PORT}`
 })
 
 export let loading: {
@@ -23,7 +19,7 @@ api.interceptors.request.use((config) => {
         if (loading && !loading.requestEnded) {
           Snackbar.open('API request is loading in background.')
         }
-      },
+      }
     })
   }
 
