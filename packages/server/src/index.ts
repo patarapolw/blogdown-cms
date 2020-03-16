@@ -39,7 +39,7 @@ import router from './router'
 
   app.listen(
     port,
-    process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1',
+    process.env.NODE_ENV !== 'development' ? '0.0.0.0' : '127.0.0.1',
     (err) => {
       if (err) {
         throw err

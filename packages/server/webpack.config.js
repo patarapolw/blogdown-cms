@@ -3,8 +3,11 @@ const path = require('path')
 const nodeExternals = require('webpack-node-externals')
 
 module.exports = {
-  mode: 'development',
+  mode: 'production',
   devtool: false,
+  optimization: {
+    minimize: false
+  },
   entry: './src/index.ts',
   output: {
     filename: 'server.js',
