@@ -31,8 +31,9 @@
         paginated
         backend-pagination
         :total="count"
-        :per-page="10"
+        :per-page="perPage"
         @page-change="onPageChanged"
+        :current-page="page"
 
         backend-sorting
         :default-sort="[sort.key, sort.type]"
@@ -105,14 +106,14 @@ export default class Query extends Vue {
 
   get headers () {
     const h = {
-      id: { label: 'id', field: 'id', width: 200 },
+      slug: { label: 'Slug', field: 'slug', width: 200 },
       title: { label: 'Title', field: 'title', sortable: true },
       date: { label: 'Date', field: 'date', width: 250, sortable: true },
       tags: { label: 'Tags', field: 'tag', width: 200 }
     }
 
     return [
-      h.id,
+      h.slug,
       h.title,
       h.tags,
       this.type === 'reveal' ? undefined : h.date
@@ -144,12 +145,16 @@ export default class Query extends Vue {
       sort: {
         key: this.sort.key,
         desc: this.sort.type === 'desc'
-      }
+      },
+      count: true
     })
+
+    this.count = r.data.count
 
     this.$set(this, 'items', r.data.data.map((el: any) => {
       return {
         ...el,
+        slug: el.slug || el.id,
         date: el.date ? dayjs(el.date).format('YYYY-MM-DD HH:mm:ss Z') : ''
       }
     }))

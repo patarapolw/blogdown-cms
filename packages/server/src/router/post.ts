@@ -76,25 +76,33 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
       q = qSearch.parse(q).cond
     }
 
-    let r = PostModel.find(q)
-
-    if (projection) {
-      r = r.select(projection)
-    }
-
-    if (sort) {
-      r = r.sort({
-        [sort.key]: sort.desc ? -1 : 1
-      })
-    }
-
-    if (offset) {
-      r = r.skip(offset)
-    }
-
-    if (limit) {
-      r = r.limit(limit)
-    }
+    const r = PostModel.aggregate([
+      {
+        $match: q
+      },
+      ...(projection ? [
+        {
+          $project: projection
+        }
+      ] : []),
+      ...(sort ? [
+        {
+          $sort: {
+            [sort.key]: sort.desc ? -1 : 1
+          }
+        }
+      ] : []),
+      ...(offset ? [
+        {
+          $skip: offset
+        }
+      ] : []),
+      ...(limit ? [
+        {
+          $limit: limit
+        }
+      ] : [])
+    ])
 
     let rCount: number | undefined
 
@@ -107,7 +115,7 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
         const date = el.date
 
         return {
-          ...el.toJSON(),
+          ...el,
           id: el._id,
           date: date ? date.toISOString() : undefined
         }

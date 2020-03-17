@@ -6,6 +6,7 @@ let cachedDb: mongoose.Mongoose | null = null
 
 export class Post {
   @prop() _id!: string
+  @prop() slug!: string
   @prop() date?: Date
   @prop({ required: true }) title!: string
   @prop({ default: () => [] }) tag?: string[]
@@ -17,27 +18,6 @@ export class Post {
 }
 
 export const PostModel = getModelForClass(Post, { schemaOptions: { timestamps: true } })
-
-export class Comment {
-  @prop({ required: true }) content!: string
-  @prop({ required: true }) user!: {
-    name: string
-    email: string
-  }
-
-  @prop({
-    default: () => ({
-      thumbUp: []
-    })
-  }) like?: {
-    thumbUp: string[]
-  }
-
-  @prop({ required: true }) replyTo!: string
-  @prop({ required: true }) path!: string
-}
-
-export const CommentModel = getModelForClass(Comment, { schemaOptions: { timestamps: true } })
 
 export async function mongooseConnect () {
   if (!cachedDb) {

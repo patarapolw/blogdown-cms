@@ -5,43 +5,15 @@
       :style="type === 'reveal' ? 'overflow-y: scroll;' : ''"
       :class="hasPreview ? 'is-6' : 'is-12'"
     )
-      b-collapse.card(:open.sync="isShowHeader" aria-id="header" style="margin-bottom: 1em;")
-        .card-header(slot="trigger" slot-scope="props" role="button" aria-controls="header" style="align-items: center;")
+      .card(aria-id="header" style="margin-bottom: 1em;")
+        .card-header(style="align-items: center;")
           p.card-header-title
             span(v-if="isLoading || title") {{title}}
             span.has-text-danger(v-else) {{noTitle}}
           div(style="flex-grow: 1;")
-          .buttons.header-buttons(@click.stop)
+          .buttons.header-buttons(@click.stop style="margin-right: 1em; word-break: keep-all;")
             b-button.is-warning(@click="hasPreview = !hasPreview") {{hasPreview ? 'Hide' : 'Show'}} Preview
             b-button.is-success(:disabled="!title || !isEdited" @click="save") Save
-          a.card-header-icon
-            b-icon(:icon="props.open ? 'angle-down' : 'angle-up'")
-        .card-content
-          b-field(
-            label="Title"
-            :type="title ? '' : 'is-danger'"
-            :message="title ? '' : noTitle"
-          )
-            b-input(v-model="title" @input="generateSlug")
-          b-field(
-            label="Slug"
-            :type="slug ? '' : 'is-danger'"
-            :message="slug ? '' : 'Slug must not be empty'"
-          )
-            b-input(v-model="slug")
-          b-field(label="Date" v-if="type !== 'reveal'")
-            b-datetimepicker(
-              rounded icon="calendar-alt"
-              :datetime-formatter="formatDate"
-              v-model="date"
-            )
-          b-field(label="Tags")
-            b-taginput(
-              v-model="tag" ellipsis icon="tag" placeholder="Add tags"
-              autocomplete allow-new open-on-focus :data="filteredTags" @typing="getFilteredTags"
-            )
-          b-field(v-if="type !== 'reveal'")
-            b-switch(v-model="isDraft") Draft
       codemirror(v-model="markdown" ref="codemirror" @input="onCmCodeChange")
     .column.is-6(v-if="hasPreview")
       RevealPreview(v-if="type === 'reveal'" :id="id" :markdown="markdown" :cursor="cursor")
@@ -55,6 +27,8 @@ import { Component, Vue, Watch, Prop } from 'vue-property-decorator'
 import dayjs from 'dayjs'
 import matter from 'gray-matter'
 import Slugify from 'seo-friendly-slugify'
+import Ajv from 'ajv'
+import yaml from 'js-yaml'
 
 import api from '../api'
 import { normalizeArray } from '../utils'
@@ -66,6 +40,8 @@ declare global {
     }
   }
 }
+
+const ajv = new Ajv()
 
 @Component<Editor>({
   beforeRouteLeave (to, from, next) {
@@ -92,25 +68,17 @@ export default class Editor extends Vue {
   @Prop() type?: string
 
   guid = ''
-  title = ''
-  slug = ''
-  date = new Date()
   markdown = ''
   isDraft = false
-  tag: string[] = []
-  filteredTags: string[] = []
-  data: {
-    id: string
-    tag?: string[]
-  }[] | null = null
 
   hasPreview = true
   excerptHtml = ''
   remainingHtml = ''
-  isShowHeader = false
   isLoading = false
   isEdited = false
   cursor = 0
+
+  title = ''
 
   readonly noTitle = 'Title must not be empty'
   readonly slugify = new Slugify()
@@ -128,7 +96,6 @@ export default class Editor extends Vue {
   }
 
   created () {
-    this.getFilteredTags('')
     this.load()
   }
 
@@ -182,27 +149,69 @@ export default class Editor extends Vue {
     return dayjs(d).format('YYYY-MM-DD HH:mm Z')
   }
 
-  async getFilteredTags (s: string) {
-    if (!this.data) {
-      this.data = (await api.post('/api/post/', {
-        q: {
-          tag: { $exists: true }
-        },
-        limit: null,
-        projection: { tag: 1 }
-      })).data.data
-      this.getFilteredTags('')
+  getAndValidateHeader (requiredNeeded = true) {
+    const { data: header = {} } = matter(this.markdown, {
+      engines: {
+        yaml: (s) => yaml.safeLoad(s, {
+          schema: yaml.JSON_SCHEMA
+        })
+      }
+    })
+
+    this.title = header.title
+
+    let valid = true
+
+    if (header.date) {
+      const d = dayjs(header.date)
+      valid = d.isValid()
+      if (!valid) {
+        this.$buefy.snackbar.open(`Invalid Date: ${header.date}`)
+        console.error(`Invalid Date: ${header.date}`)
+        return
+      }
+
+      header.date = d.toISOString()
     }
 
-    this.filteredTags = this.data!
-      .map((d) => d.tag)
-      .filter((t) => t && (s.trim() ? t.includes(s) : true))
-      .reduce((a, b) => [...a!, ...b!], [])!
+    if (requiredNeeded && !header.title) {
+      this.$buefy.snackbar.open('Title is required')
+      console.error('Title is required')
+      return
+    }
+
+    const validator = ajv.compile({
+      type: 'object',
+      properties: {
+        title: { type: ['string', 'null'] },
+        slug: { type: ['string', 'null'] },
+        date: { type: ['string', 'null'] },
+        tag: { type: 'array', items: { type: ['string', 'null'] } },
+        image: { type: ['string', 'null'] }
+      }
+    })
+    valid = !!validator(header)
+
+    if (!valid) {
+      for (const e of validator.errors || []) {
+        this.$buefy.snackbar.open(JSON.stringify(e))
+        console.error(e)
+      }
+
+      return null
+    }
+
+    return header as {
+      title: string
+      slug?: string
+      date?: string
+      tag?: string[]
+      image?: string
+    }
   }
 
   @Watch('$route.query.id')
   async load () {
-    this.isShowHeader = false
     this.isLoading = true
 
     this.guid = Math.random().toString(36).substr(2)
@@ -215,22 +224,27 @@ export default class Editor extends Vue {
       }))
 
       if (r.data) {
-        const { excerpt, remaining, header, title, date, tag, id, raw } = r.data
+        const { excerpt, remaining, header, title, date, tag, id, slug, raw } = r.data
 
-        this.markdown = raw
-        this.title = title
-        this.slug = id
-        this.date = dayjs(date).toDate()
-        this.$set(this, 'tag', tag)
+        const { data: rawHeader, content } = matter(raw)
+        Object.assign(rawHeader, { title, slug: slug || id, date, tag })
+
+        this.markdown = matter.stringify(content, rawHeader, {
+          engines: {
+            yaml: {
+              parse: (s) => yaml.safeLoad(s),
+              stringify: (s) => yaml.safeDump(s, {
+                schema: yaml.JSON_SCHEMA
+              })
+            }
+          }
+        })
+        this.title = rawHeader.title
 
         setTimeout(() => {
           this.isEdited = false
         }, 100)
-      } else {
-        this.isShowHeader = true
       }
-    } else {
-      this.isShowHeader = true
     }
 
     this.isLoading = false
@@ -241,27 +255,31 @@ export default class Editor extends Vue {
       return
     }
 
-    const id = normalizeArray(this.$route.query.id)
-    const { data: header = {} } = matter(this.markdown)
+    const header = this.getAndValidateHeader()
+
+    if (!header) {
+      return
+    }
 
     const content = {
       type: this.type,
-      tag: this.tag,
+      tag: header.tag || [],
       title: this.title,
-      date: (this.type !== 'reveal' && this.date) ? this.date.toISOString() : undefined,
+      slug: header.slug,
+      date: (this.type !== 'reveal' && header.date) ? header.date : undefined,
       excerpt: this.excerptHtml,
       remaining: this.type === 'reveal' ? '' : this.remainingHtml,
       raw: this.markdown,
       header
     }
 
-    if (!id) {
+    if (!this.id) {
       /**
        * Create a post
        */
       const r = await api.put('/api/post/', {
         ...content,
-        slug: this.slug
+        slug: header.slug || this.generateSlug()
       })
 
       this.$router.push({
@@ -271,7 +289,7 @@ export default class Editor extends Vue {
       })
     } else {
       await api.patch('/api/post/', {
-        id,
+        id: this.id,
         update: content
       })
     }
@@ -283,14 +301,13 @@ export default class Editor extends Vue {
     }, 100)
   }
 
-  @Watch('hasPreview')
   onCmCodeChange () {
     this.isEdited = true
-    this.isShowHeader = false
+    this.getAndValidateHeader(false)
   }
 
   generateSlug () {
-    this.slug = this.title ? `${(() => {
+    return this.title ? `${(() => {
         const s = this.slugify.slugify(this.title)
         return s ? `${s}-` : ''
       })()}${this.guid}` : ''
