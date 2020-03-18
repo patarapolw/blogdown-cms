@@ -53,5 +53,8 @@
   "browserslist": [
     "> 1%",
     "last 2 versions"
-  ]
+  ],
+  "resolutions": {
+    "minimist": ">=1.2.3"
+  }
 }
