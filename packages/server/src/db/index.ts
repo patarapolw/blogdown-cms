@@ -1,8 +1,8 @@
 import { prop, getModelForClass } from '@typegoose/typegoose'
 import mongoose from 'mongoose'
-import { config } from '../config'
+import { String } from 'runtypes'
 
-let cachedDb: mongoose.Mongoose | null = null
+export let cachedDb: mongoose.Mongoose | null = null
 
 export class Post {
   @prop() _id!: string
@@ -22,10 +22,11 @@ export const PostModel = getModelForClass(Post, { schemaOptions: { timestamps: t
 
 export async function mongooseConnect () {
   if (!cachedDb) {
-    cachedDb = await mongoose.connect(config.mongo.uri, {
+    cachedDb = await mongoose.connect(String.check(process.env.MONGO_URI), {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       useCreateIndex: true
     })
   }
+  return cachedDb
 }

@@ -2,9 +2,9 @@ import path from 'path'
 
 import fastify from 'fastify'
 import fastifyStatic from 'fastify-static'
+import { String } from 'runtypes'
 
 import { mongooseConnect } from './db'
-import { config } from './config'
 import router from './router'
 
 ;(async () => {
@@ -23,7 +23,7 @@ import router from './router'
     done()
   })
 
-  const port = parseInt(process.env.PORT || (config.port || 24000).toString())
+  const port = parseInt(String.check(process.env.PORT))
 
   if (process.env.ADMIN) {
     app.register(require('fastify-cors'))

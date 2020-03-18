@@ -5,9 +5,11 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "webpack",
-    "dev": "ADMIN=1 ts-node-dev src/index.ts",
-    "preinstall": "is-npm"
+    "start": "node dist/index.ts",
+    "build:heroku": "OUT_DIR=../../heroku-dist webpack",
+    "build": "tsc",
+    "admin": "ADMIN=1 node dist/index.js",
+    "dev": "ADMIN=1 ts-node-dev src/index.ts"
   },
   "dependencies": {
     "@patarapolw/qsearch": "^1.1.1",
