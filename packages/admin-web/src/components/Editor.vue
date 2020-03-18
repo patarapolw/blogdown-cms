@@ -11,7 +11,7 @@
             span(v-if="isLoading || title") {{title}}
             span.has-text-danger(v-else) {{noTitle}}
           div(style="flex-grow: 1;")
-          .buttons.header-buttons(@click.stop style="margin-right: 1em; word-break: keep-all;")
+          .buttons.header-buttons(@click.stop style="margin-right: 1em; white-space: nowrap; display: block;")
             b-button.is-warning(@click="hasPreview = !hasPreview") {{hasPreview ? 'Hide' : 'Show'}} Preview
             b-button.is-success(:disabled="!title || !isEdited" @click="save") Save
       codemirror(v-model="markdown" ref="codemirror" @input="onCmCodeChange")
@@ -31,7 +31,7 @@ import Ajv from 'ajv'
 import yaml from 'js-yaml'
 
 import api from '../api'
-import { normalizeArray } from '../utils'
+import { normalizeArray, stringSorter } from '../utils'
 
 declare global {
   namespace CodeMirror {
@@ -65,8 +65,6 @@ const ajv = new Ajv()
   }
 })
 export default class Editor extends Vue {
-  @Prop() type?: string
-
   guid = ''
   markdown = ''
   isDraft = false
@@ -79,6 +77,7 @@ export default class Editor extends Vue {
   cursor = 0
 
   title = ''
+  type = ''
 
   readonly noTitle = 'Title must not be empty'
   readonly slugify = new Slugify()
@@ -150,25 +149,24 @@ export default class Editor extends Vue {
   }
 
   getAndValidateHeader (requiredNeeded = true) {
-    const { data: header = {} } = matter(this.markdown, {
-      engines: {
-        yaml: (s) => yaml.safeLoad(s, {
-          schema: yaml.JSON_SCHEMA
-        })
-      }
-    })
+    const { data: header = {} } = matter(this.markdown)
 
     this.title = header.title
+    this.type = header.type || ''
 
     let valid = true
 
     if (header.date) {
-      const d = dayjs(header.date)
+      let d = dayjs(header.date)
       valid = d.isValid()
       if (!valid) {
         this.$buefy.snackbar.open(`Invalid Date: ${header.date}`)
         console.error(`Invalid Date: ${header.date}`)
         return
+      }
+
+      if (header.date instanceof Date) {
+        d = d.add(new Date().getTimezoneOffset(), 'minute')
       }
 
       header.date = d.toISOString()
@@ -187,7 +185,9 @@ export default class Editor extends Vue {
         slug: { type: ['string', 'null'] },
         date: { type: ['string', 'null'] },
         tag: { type: 'array', items: { type: ['string', 'null'] } },
-        image: { type: ['string', 'null'] }
+        image: { type: ['string', 'null'] },
+        category: { type: ['string', 'null'] },
+        type: { type: ['string', 'null'] }
       }
     })
     valid = !!validator(header)
@@ -206,7 +206,8 @@ export default class Editor extends Vue {
       slug?: string
       date?: string
       tag?: string[]
-      image?: string
+      image?: string,
+      category?: string
     }
   }
 
@@ -227,7 +228,12 @@ export default class Editor extends Vue {
         const { excerpt, remaining, header, title, date, tag, id, slug, raw } = r.data
 
         const { data: rawHeader, content } = matter(raw)
-        Object.assign(rawHeader, { title, slug: slug || id, date, tag })
+        Object.assign(rawHeader, {
+          title,
+          slug: slug || id,
+          date: date ? dayjs(date).format('YYYY-MM-DD HH:mm Z') : undefined,
+          tag: (tag || []).sort(stringSorter)
+        })
 
         this.markdown = matter.stringify(content, rawHeader, {
           engines: {
@@ -264,11 +270,11 @@ export default class Editor extends Vue {
     const content = {
       type: this.type,
       tag: header.tag || [],
+      category: header.category,
       title: this.title,
       slug: header.slug,
-      date: (this.type !== 'reveal' && header.date) ? header.date : undefined,
+      date: header.date,
       excerpt: this.excerptHtml,
-      remaining: this.type === 'reveal' ? '' : this.remainingHtml,
       raw: this.markdown,
       header
     }

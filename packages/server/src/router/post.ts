@@ -38,6 +38,7 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
         required: ['q'],
         properties: {
           q: { type: ['string', 'object'] },
+          cond: { type: 'object' },
           offset: { type: 'number' },
           limit: { type: 'number' },
           sort: {
@@ -60,7 +61,7 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
       }
     }
   }, async (req) => {
-    let { q, offset, limit, sort, projection, count } = req.body
+    let { q, cond, offset, limit, sort, projection, count } = req.body
 
     if (typeof q === 'string') {
       const qSearch = new QSearch({
@@ -70,11 +71,23 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
           date: { type: 'date' },
           title: {},
           tag: {},
-          excerpt: {}
+          excerpt: {},
+          category: {}
         }
       })
       q = qSearch.parse(q).cond
     }
+
+    if (cond) {
+      q = {
+        $and: [
+          q,
+          cond
+        ]
+      }
+    }
+
+    // console.dir(q, { depth: null })
 
     const r = PostModel.aggregate([
       {
@@ -107,7 +120,7 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
     let rCount: number | undefined
 
     if (count) {
-      rCount = await PostModel.find(q).count()
+      rCount = await PostModel.find(q).countDocuments()
     }
 
     return {
@@ -162,13 +175,16 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
         }
       }
     }, async (req) => {
-      const { date, slug, ...p } = req.body
+      let { date, slug, ...p } = req.body
+      slug = slug || `${(() => {
+        const s = slugify.slugify(p.title)
+        return s ? `${s}-` : ''
+      })()}${Math.random().toString(36).substr(2)}`
+
       const { id } = await PostModel.create({
         ...p,
-        _id: slug || `${(() => {
-          const s = slugify.slugify(p.title)
-          return s ? `${s}-` : ''
-        })()}${Math.random().toString(36).substr(2)}`,
+        slug,
+        _id: slug,
         date: date ? new Date(date) : undefined
       } as Post)
 

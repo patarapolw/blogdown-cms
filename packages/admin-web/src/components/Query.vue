@@ -4,7 +4,7 @@
     template(slot="end")
       b-navbar-item(tag="div")
         .buttons
-          router-link.button(:to="newTo") New
+          router-link.button(:to="getTo()") New
           button.button(@click="load") Reload
           b-dropdown(aria-role="list" position="is-bottom-left")
             button.button(:disabled="checked.length === 0" slot="trigger")
@@ -22,7 +22,7 @@
         detailed
 
         :selected.sync="selected"
-        @select="openItem($event.id)"
+        @select="openItem($event)"
 
         checkable
         :checked-rows.sync="checked"
@@ -75,12 +75,10 @@ import { Component, Vue, Watch, Prop } from 'vue-property-decorator'
 import dayjs from 'dayjs'
 
 import api from '../api'
-import { normalizeArray } from '../utils'
+import { normalizeArray, stringSorter } from '../utils'
 
 @Component
 export default class Query extends Vue {
-  @Prop() type?: string
-
   selected: any = null
   checked: any[] = []
 
@@ -104,26 +102,30 @@ export default class Query extends Vue {
     return parseInt(normalizeArray(this.$route.query.page) || '1')
   }
 
+  get q () {
+    return this.$route.query.q || '' as string
+  }
+
   get headers () {
     const h = {
       slug: { label: 'Slug', field: 'slug', width: 200 },
       title: { label: 'Title', field: 'title', sortable: true },
       date: { label: 'Date', field: 'date', width: 250, sortable: true },
-      tags: { label: 'Tags', field: 'tag', width: 200 }
+      category: { label: 'Category', field: 'category', width: 150, sortable: true },
+      tag: { label: 'Tag', field: 'tag', width: 200 }
     }
 
     return [
       h.slug,
       h.title,
-      h.tags,
-      this.type === 'reveal' ? undefined : h.date
+      h.category,
+      h.tag,
+      h.date
     ].filter((el) => el)
   }
 
-  get newTo () {
-    return `/${
-        this.type === 'reveal' ? 'reveal' : 'post'
-      }/edit`
+  getTo () {
+    return '/post/edit'
   }
 
   mounted () {
@@ -131,15 +133,12 @@ export default class Query extends Vue {
   }
 
   @Watch('$route.query.page')
+  @Watch('$route.query.q')
   async load () {
     this.$set(this, 'checked', [])
 
     const r = await api.post('/api/post/', {
-      q: {
-        type: this.type === undefined ? {
-          $exists: false
-        } : this.type
-      },
+      q: this.q,
       offset: (this.page - 1) * this.perPage,
       limit: this.perPage,
       sort: {
@@ -155,7 +154,8 @@ export default class Query extends Vue {
       return {
         ...el,
         slug: el.slug || el.id,
-        date: el.date ? dayjs(el.date).format('YYYY-MM-DD HH:mm:ss Z') : ''
+        tag: (el.tag || []).sort(stringSorter),
+        date: el.date ? dayjs(el.date).format('YYYY-MM-DD HH:mm Z') : ''
       }
     }))
   }
@@ -215,11 +215,11 @@ export default class Query extends Vue {
     }
   }
 
-  openItem (id: string) {
+  openItem (it: any) {
     this.$router.push({
-      path: this.newTo,
+      path: this.getTo(),
       query: {
-        id
+        id: it.id
       }
     })
   }

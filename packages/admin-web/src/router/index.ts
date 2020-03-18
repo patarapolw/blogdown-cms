@@ -17,16 +17,6 @@ const router = new VueRouter({
     {
       path: '/post/edit',
       component: () => import('../components/Editor.vue')
-    },
-    {
-      path: '/reveal',
-      component: () => import('../components/Query.vue'),
-      props: { type: 'reveal' }
-    },
-    {
-      path: '/reveal/edit',
-      component: () => import('../components/Editor.vue'),
-      props: { type: 'reveal' }
     }
   ]
 })

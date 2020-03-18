@@ -4,3 +4,10 @@ export function normalizeArray<T> (a: T | T[]): T | undefined {
   }
   return a
 }
+
+export function stringSorter (a: any, b: any) {
+  if (typeof a === 'string' && typeof b === 'string') {
+    return a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase())
+  }
+  return 0
+}
