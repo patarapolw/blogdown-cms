@@ -1,22 +1,29 @@
 import fs from 'fs'
 import path from 'path'
+import { Readable } from 'stream'
+import assert from 'assert'
 
 import { FastifyInstance } from 'fastify'
 // @ts-ignore
 import fileUpload from 'fastify-file-upload'
 import dayjs from 'dayjs'
 import cloudinary from 'cloudinary'
-
-import { config } from '../config'
+import { GridFSBucket } from 'mongodb'
+import { cachedDb } from '../db'
+import { tmpDir } from '../config'
 
 export default (f: FastifyInstance, opts: any, next: () => void) => {
-  const { apiKey, apiSecret, cloudName, buckets, tmp } = config.cloudinary
+  let gridFS: GridFSBucket | null = null
 
-  cloudinary.v2.config({
-    api_key: apiKey,
-    api_secret: apiSecret,
-    cloud_name: cloudName
-  })
+  if (process.env.CLOUDINARY_API_SECRET) {
+    cloudinary.v2.config({
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME
+    })
+  } else {
+    gridFS = new GridFSBucket(cachedDb!.connection.db)
+  }
 
   f.patch('/', {
     schema: {
@@ -24,24 +31,36 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
       summary: 'Update media filename',
       body: {
         type: 'object',
-        required: ['filename', 'newFilename', 'type'],
+        required: ['filename', 'newFilename'],
         properties: {
           filename: { type: 'string' },
-          newFilename: { type: 'string' },
-          type: { type: 'string', enum: ['admin', 'client'] }
+          newFilename: { type: 'string' }
         }
       }
     }
   }, async (req) => {
-    const { filename, newFilename, type } = req.body
+    const { filename, newFilename } = req.body
 
-    fs.renameSync(path.join(tmp, filename), path.join(tmp, newFilename))
-    const bucket = (buckets as any)[type]
+    fs.renameSync(path.join(tmpDir, filename), path.join(tmpDir, newFilename))
 
-    await cloudinary.v2.uploader.rename(
-      joinPath(bucket, filename),
-      joinPath(bucket, newFilename)
-    )
+    if (gridFS) {
+      await cachedDb!.connection.db.collection('fs.files').findOneAndUpdate({
+        filename
+      }, {
+        Sset: {
+          filename: newFilename
+        }
+      })
+    } else {
+      await cloudinary.v2.uploader.rename(
+        joinPath('blogdown', filename),
+        joinPath('blogdown', newFilename)
+      )
+    }
+
+    return {
+      error: null
+    }
   })
 
   f.register(fileUpload)
@@ -52,15 +71,14 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
       summary: 'Upload media',
       body: {
         type: 'object',
-        required: ['file', 'type'],
+        required: ['file'],
         properties: {
-          file: { type: 'object' },
-          type: { type: 'string' }
+          file: { type: 'object' }
         }
       }
     }
   }, async (req) => {
-    const { file, type } = req.body
+    const { file } = req.body
 
     let filename = file.name
     if (filename === 'image.png') {
@@ -70,7 +88,7 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
     filename = (() => {
       const originalFilename = filename
 
-      while (fs.existsSync(path.resolve(tmp, filename))) {
+      while (fs.existsSync(path.resolve(tmpDir, filename))) {
         const [base, ext] = originalFilename.split(/(\.[a-z]+)$/i)
         filename = base + '-' + Math.random().toString(36).substr(2) + (ext || '.png')
       }
@@ -78,18 +96,38 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
       return filename
     })()
 
-    file.mv(path.join(tmp, filename))
+    if (gridFS) {
+      await new Promise((resolve, reject) => {
+        const readable = new Readable({
+          read () {
+            this.push(file.data)
+          }
+        })
 
-    const bucket = (buckets as any)[type]
+        readable
+          .pipe(gridFS!.openUploadStream(filename))
+          .on('error', (err) => {
+            reject(err)
+          })
+          .on('finish', () => {
+            resolve()
+          })
+      })
 
-    const r = await cloudinary.v2.uploader.upload(path.join(tmp, filename), {
-      public_id: joinPath(bucket, filename)
-    })
+      return {
+        filename
+      }
+    } else {
+      file.mv(path.join(tmpDir, filename))
 
-    return {
-      filename,
-      type,
-      url: r.secure_url
+      const r = await cloudinary.v2.uploader.upload(path.join(tmpDir, filename), {
+        public_id: joinPath('blogdown', filename).replace(/\.[^.]+?$/, '')
+      })
+
+      return {
+        filename,
+        url: r.secure_url
+      }
     }
   })
 
@@ -106,10 +144,22 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
       }
     }
   }, (req, reply) => {
-    const { type, filename } = req.params
-    reply.redirect(
-      cloudinary.v2.image(joinPath(type, filename))
-    )
+    const { filename } = req.params
+
+    if (gridFS) {
+      gridFS.openDownloadStreamByName(filename)
+        .pipe(reply.res)
+        .on('error', (error) => {
+          assert.ifError(error)
+        })
+        .on('end', () => {
+          reply.res.end()
+        })
+    } else {
+      reply.redirect(
+        cloudinary.v2.image(joinPath('blogdown', filename))
+      )
+    }
   })
 
   next()

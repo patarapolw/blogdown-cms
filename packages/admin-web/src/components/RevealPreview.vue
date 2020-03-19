@@ -1,6 +1,6 @@
 <template lang="pug">
 .card(style="max-height: 100vh; height: 100%;")
-  .card-content( style="height: 100%; width: 100%;")
+  .card-content(style="height: 100%; width: 100%;")
     iframe(
       ref="iframe"
       frameborder="0" style="height: 100%; width: 100%;"

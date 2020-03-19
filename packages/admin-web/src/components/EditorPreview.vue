@@ -1,5 +1,5 @@
 <template lang="pug">
-.card(v-else style="min-height: 100%;")
+.card(v-else style="max-height: 100%; overflow-y: scroll;")
   img(v-if="image" style="max-width: 100%; width: 100%;" :src="image")
   .card-content
     h1.title {{title}}
@@ -14,20 +14,24 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
-import matter from 'gray-matter'
 import MakeHtml from '@patarapolw/blogdown-make-html'
+
+import { Matter } from '../utils'
 
 @Component
 export default class EditorPreview extends Vue {
   @Prop({ required: true }) title!: string
   @Prop({ required: true }) markdown!: string
   @Prop() id?: string
+  @Prop({ default: 0 }) scrollSize!: number
 
   guid?: string = ''
   image?: string = ''
 
   isShowRemaining = true
   hasRemaining = false
+
+  matter = new Matter()
 
   get makeHtml () {
     return new MakeHtml(this.guid)
@@ -46,7 +50,7 @@ export default class EditorPreview extends Vue {
   @Watch('markdown')
   onMarkdownChanged () {
     const { excerpt, remaining } = this.$refs as any
-    const { data: header, content: md } = matter(this.markdown)
+    const { header, content: md } = this.matter.parse(this.markdown)
     this.image = header.image
 
     // @ts-ignore
@@ -63,6 +67,11 @@ export default class EditorPreview extends Vue {
 
       this.hasRemaining = !!remainingMd
     }
+  }
+
+  @Watch('scrollSize')
+  onEditorScroll () {
+    this.$el.scrollTop = this.scrollSize * (this.$el.scrollHeight - this.$el.clientHeight)
   }
 }
 </script>

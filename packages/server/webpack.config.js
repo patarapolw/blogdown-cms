@@ -1,6 +1,11 @@
+const fs = require('fs')
 const path = require('path')
 
 const nodeExternals = require('webpack-node-externals')
+const webpack = require('webpack')
+const yaml = require('js-yaml')
+
+const config = yaml.safeLoad(fs.readFileSync('../../config.yaml', 'utf8'))
 
 module.exports = {
   mode: 'production',
@@ -11,7 +16,7 @@ module.exports = {
   entry: './src/index.ts',
   output: {
     filename: 'server.js',
-    path: path.resolve(__dirname, '../../heroku-dist')
+    path: path.resolve(process.env.OUT_DIR || 'dist')
   },
   module: {
     rules: [
@@ -27,5 +32,10 @@ module.exports = {
   target: 'node',
   externals: [
     nodeExternals()
+  ],
+  plugins: [
+    new webpack.DefinePlugin({
+      __excerptSeparator__: config.grayMatter.excerptSeparator
+    })
   ]
 }

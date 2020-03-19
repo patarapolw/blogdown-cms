@@ -1,8 +1,8 @@
 /// <reference path="./reveal.d.ts" />
-import matter from 'gray-matter'
 import { Serialize } from 'any-serialize'
 import MakeHtml from '@patarapolw/blogdown-make-html'
 
+import { Matter } from './utils'
 import './reveal.scss'
 
 const currentSlide = location.hash
@@ -15,6 +15,8 @@ declare global {
     revealMd?: RevealMd
   }
 }
+
+const matter = new Matter()
 
 export class RevealMd {
   _headers: RevealOptions | null = null
@@ -59,9 +61,9 @@ export class RevealMd {
       id: 'reveal-theme'
     }))
 
-    const { data, content } = matter(placeholder)
+    const { header, content } = matter.parse(placeholder)
 
-    this.headers = data
+    this.headers = header
     this.markdown = content
 
     this.onReady(() => {
@@ -237,9 +239,9 @@ export class RevealMd {
   }
 
   update (raw: string) {
-    const { data, content } = matter(raw)
+    const { header, content } = matter.parse(raw)
     this.markdown = content
-    this.headers = data
+    this.headers = header
   }
 
   onReady (fn?: (reveal?: RevealStatic) => void) {

@@ -1,9 +1,10 @@
 <template lang="pug">
 .container
-  .columns.editor(:class="type === 'reveal' ? 'editor-for-iframe' : 'editor-for-regular'")
+  .columns.editor
     .column(
-      :style="type === 'reveal' ? 'overflow-y: scroll;' : ''"
+      style="max-height: 100%; overflow-y: scroll;"
       :class="hasPreview ? 'is-6' : 'is-12'"
+      @scroll="onScroll"
     )
       .card(aria-id="header" style="margin-bottom: 1em;")
         .card-header(style="align-items: center;")
@@ -17,7 +18,7 @@
       codemirror(v-model="markdown" ref="codemirror" @input="onCmCodeChange")
     .column.is-6(v-if="hasPreview")
       RevealPreview(v-if="type === 'reveal'" :id="id" :markdown="markdown" :cursor="cursor")
-      EditorPreview(v-else :title="title" :id="id" :markdown="markdown"
+      EditorPreview(v-else :title="title" :id="id" :markdown="markdown" :scrollSize="scrollSize"
         @excerpt="excerptHtml = $event" @remaining="remainingHtml = $event"
       )
 </template>
@@ -25,13 +26,12 @@
 <script lang="ts">
 import { Component, Vue, Watch, Prop } from 'vue-property-decorator'
 import dayjs from 'dayjs'
-import matter from 'gray-matter'
 import Slugify from 'seo-friendly-slugify'
 import Ajv from 'ajv'
 import yaml from 'js-yaml'
 
 import api from '../api'
-import { normalizeArray, stringSorter } from '../utils'
+import { normalizeArray, stringSorter, Matter } from '../utils'
 
 declare global {
   namespace CodeMirror {
@@ -78,9 +78,11 @@ export default class Editor extends Vue {
 
   title = ''
   type = ''
+  scrollSize = 0
 
   readonly noTitle = 'Title must not be empty'
   readonly slugify = new Slugify()
+  readonly matter = new Matter()
 
   get id () {
     return normalizeArray(this.$route.query.id)
@@ -125,7 +127,7 @@ export default class Editor extends Vue {
             const cursor = ins.getCursor()
 
             const { data: r } = await api.post('/api/media/upload', formData)
-            ins.getDoc().replaceRange(`![${r.filename}](${r.url} local)`, cursor)
+            ins.getDoc().replaceRange(`![${r.filename}](${r.url})`, cursor)
           }
         }
       }
@@ -149,7 +151,7 @@ export default class Editor extends Vue {
   }
 
   getAndValidateHeader (requiredNeeded = true) {
-    const { data: header = {} } = matter(this.markdown)
+    const { header } = this.matter.parse(this.markdown)
 
     this.title = header.title
     this.type = header.type || ''
@@ -227,7 +229,7 @@ export default class Editor extends Vue {
       if (r.data) {
         const { excerpt, remaining, header, title, date, tag, id, slug, raw } = r.data
 
-        const { data: rawHeader, content } = matter(raw)
+        const { header: rawHeader, content } = this.matter.parse(raw)
         Object.assign(rawHeader, {
           title,
           slug: slug || id,
@@ -235,16 +237,7 @@ export default class Editor extends Vue {
           tag: (tag || []).sort(stringSorter)
         })
 
-        this.markdown = matter.stringify(content, rawHeader, {
-          engines: {
-            yaml: {
-              parse: (s) => yaml.safeLoad(s),
-              stringify: (s) => yaml.safeDump(s, {
-                schema: yaml.JSON_SCHEMA
-              })
-            }
-          }
-        })
+        this.markdown = this.matter.stringify(content, rawHeader)
         this.title = rawHeader.title
 
         setTimeout(() => {
@@ -318,6 +311,11 @@ export default class Editor extends Vue {
         return s ? `${s}-` : ''
       })()}${this.guid}` : ''
   }
+
+  onScroll (evt: any) {
+    this.scrollSize = evt.target.scrollTop / (evt.target.scrollHeight - evt.target.clientHeight)
+    this.$forceUpdate()
+  }
 }
 </script>
 
@@ -332,10 +330,7 @@ export default class Editor extends Vue {
 
 .editor {
   margin-top: 1em;
-  min-height: 90vh;
-}
-
-.editor-for-iframe {
+  max-height: 90vh;
   height: 90vh;
 }
 
