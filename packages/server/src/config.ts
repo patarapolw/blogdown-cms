@@ -25,7 +25,9 @@ if (process.env.ADMIN) {
   }
 }
 
-fs.mkdirpSync('tmp')
-fs.writeFileSync(path.join('tmp', '.gitignore'), `*.*
+export const tmpDir = path.resolve('tmp')
+
+fs.mkdirpSync(tmpDir)
+fs.writeFileSync(path.join(tmpDir, '.gitignore'), `*.*
 !.gitignore
 `)

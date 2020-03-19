@@ -10,7 +10,7 @@ div
       b-navbar-item(tag="a" href="https://cloudinary.com/console/" target="_blank") Media
     template(slot="end")
       b-navbar-item(tag="div")
-        field.field.has-addons(@submit.prevent="loadQ")
+        div.field.has-addons(@submit.prevent="loadQ")
           p.control.has-icons-left
             span.icon.is-small.is-left
               fontawesome(icon="search")

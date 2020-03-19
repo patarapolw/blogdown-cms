@@ -17,7 +17,25 @@ import router from './router'
   })
   app.addHook('preHandler', function (req, reply, done) {
     if (req.body) {
-      req.log.info({ body: req.body }, 'body')
+      const trimmer = (obj: any): any => {
+        if (obj) {
+          if (Array.isArray(obj)) {
+            return obj.map((a) => trimmer(a))
+          } else if (obj.constructor === Object) {
+            return Object.entries(obj)
+              .map(([k, v]) => [k, trimmer(v)])
+              .reduce((prev, [k, v]) => ({ ...prev, [k]: v }), {})
+          } else if (obj.constructor === Buffer) {
+            return
+          }
+        }
+
+        return obj
+      }
+
+      const body = typeof req.body === 'object' ? trimmer(req.body) : null
+
+      req.log.info({ body }, 'body')
     }
 
     done()

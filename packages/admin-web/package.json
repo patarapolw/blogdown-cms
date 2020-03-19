@@ -6,7 +6,7 @@
     "dev": "npm run serve",
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "preinstall": "is-npm"
+    "preinstall": "is-npm && npx npm-force-resolutions"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.26",
@@ -22,7 +22,6 @@
     "buefy": "^0.8.10",
     "core-js": "^3.4.4",
     "dayjs": "^1.8.19",
-    "gray-matter": "^4.0.2",
     "htmlparser2": "^4.1.0",
     "hyperpug": "^1.1.1",
     "hyperscript": "^2.0.2",
