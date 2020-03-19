@@ -47,7 +47,7 @@ export default class RevealPreview extends Vue {
       if (m) {
         return {
           offset: m[1].split('\n').length,
-          content: m[3]
+          content: m[2]
         }
       }
 
