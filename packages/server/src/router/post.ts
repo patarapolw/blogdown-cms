@@ -13,11 +13,12 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
       tags: ['post'],
       summary: 'Get a post',
       querystring: {
-        id: { type: 'string' }
+        id: { type: 'string' },
+        slug: { type: 'string' }
       }
     }
   }, async (req) => {
-    const r = await PostModel.findOne({ _id: req.query.id })
+    const r = await PostModel.findOne(JSON.parse(JSON.stringify({ _id: req.query.id, slug: req.query.slug })))
     if (r) {
       return {
         ...r.toJSON(),
