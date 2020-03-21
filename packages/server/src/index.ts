@@ -42,9 +42,9 @@ import router from './router'
   })
 
   const port = parseInt(String.check(process.env.PORT))
+  app.register(require('fastify-cors'))
 
   if (process.env.ADMIN) {
-    app.register(require('fastify-cors'))
     app.register(fastifyStatic, {
       root: path.join(__dirname, '../../admin-web/dist')
     })
