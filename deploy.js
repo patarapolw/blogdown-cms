@@ -13,13 +13,16 @@ const execa = require('execa')
 async function execaPipe (cmd, args, opts) {
   const p = execa(cmd, args, opts)
   p.stdout.pipe(process.stdout)
+  p.stderr.pipe(process.stderr)
+
   return p
 }
 
 async function main () {
-  const r = await execaPipe('git', ['branch'])
-  if (!(r.all && r.all.includes('heroku-dist'))) {
-    await execaPipe('git', ['branch', '-b', 'heroku-dist'])
+  const r = await execa('git', ['branch'])
+
+  if (!(r.stdout && r.stdout.includes('heroku-dist'))) {
+    await execaPipe('git', ['branch', 'heroku-dist'])
     await execaPipe('git', ['worktree', 'add', 'heroku-dist'])
     await execaPipe('git', ['rm', '-rf'], {
       cwd: 'heroku-dist'
@@ -34,8 +37,20 @@ async function main () {
     })
   }
 
-  await execaPipe('npm', ['run', 'build'], {
+  await execaPipe('npm', ['run', 'build:heroku'], {
     cwd: 'packages/server'
+  })
+
+  await execaPipe('git', ['add', '.'], {
+    cwd: 'heroku-dist'
+  })
+
+  await execaPipe('git', ['commit', '-m', 'deploy'], {
+    cwd: 'heroku-dist'
+  })
+
+  await execaPipe('git', ['push', 'heroku', 'heroku-dist:master'], {
+    cwd: 'heroku-dist'
   })
 }
 

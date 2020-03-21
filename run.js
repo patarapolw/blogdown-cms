@@ -35,6 +35,7 @@ async function npmRunAutoInstall (opts) {
     cwd: path.resolve(opts.cwd)
   })
   p.stdout.pipe(process.stdout)
+  // p.stderr.pipe(process.stderr)
 
   return p
 }

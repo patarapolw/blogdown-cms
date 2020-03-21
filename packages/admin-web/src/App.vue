@@ -35,7 +35,7 @@ export default class App extends Vue {
 
   loadQ () {
     this.$router.push({
-      path: '/search',
+      path: '/post',
       query: {
         q: this.q
       }
