@@ -20,7 +20,7 @@ if (process.env.ADMIN) {
 } else {
   config = {
     grayMatter: {
-      excerptSeparator: __excerptSeparator__ || '<!-- excerpt_separator -->'
+      excerptSeparator: '__excerptSeparator__' || '<!-- excerpt_separator -->'
     }
   }
 }
