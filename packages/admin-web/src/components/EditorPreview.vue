@@ -1,5 +1,5 @@
 <template lang="pug">
-.card(v-else style="max-height: 100%; overflow-y: scroll;")
+.card(style="max-height: 100%; overflow-y: scroll;")
   img(v-if="image" style="max-width: 100%; width: 100%;" :src="image")
   .card-content
     h1.title {{title}}
