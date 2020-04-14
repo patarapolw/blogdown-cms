@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify'
-import { String, Array } from 'runtypes'
+import * as t from 'runtypes'
 import Slugify from 'seo-friendly-slugify'
 import QSearch from '@patarapolw/qsearch'
 
@@ -13,8 +13,11 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
       tags: ['post'],
       summary: 'Get a post',
       querystring: {
-        id: { type: 'string' },
-        slug: { type: 'string' }
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          slug: { type: 'string' }
+        }
       }
     }
   }, async (req) => {
@@ -28,6 +31,32 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
     }
 
     return null
+  })
+
+  f.get('/tag', {
+    schema: {
+      tags: ['post'],
+      summary: 'Get all tags by category',
+      querystring: {
+        type: 'object',
+        required: ['category'],
+        properties: {
+          category: { type: 'string' }
+        }
+      }
+    }
+  }, async (req) => {
+    const { category } = req.query
+    const r = await PostModel.find({ category }).select({ tag: 1, _id: 0 })
+
+    return r.map((el) => Array.from(new Set(el.tag || [])))
+      .reduce((prev, ts) => {
+        ts.map((t) => {
+          prev[t] = (prev[t] || 0) + 1
+        })
+
+        return prev
+      }, {} as any)
   })
 
   f.post('/', {
@@ -155,7 +184,7 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
     }, async (req) => {
       const { id, update } = req.body
 
-      await PostModel.updateOne({ _id: String.check(id) }, {
+      await PostModel.updateOne({ _id: t.String.check(id) }, {
         $set: update
       })
 
@@ -245,9 +274,9 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
     }, async (req) => {
       const { ids, tags } = req.body
       await PostModel.updateMany({
-        _id: { $in: Array(String).check(ids) }
+        _id: { $in: t.Array(t.String).check(ids) }
       }, {
-        $set: { tag: Array(String).check(tags) }
+        $set: { tag: t.Array(t.String).check(tags) }
       })
 
       return {
@@ -271,9 +300,9 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
     }, async (req) => {
       const { ids, tags } = req.body
       await PostModel.updateMany({
-        _id: { $in: Array(String).check(ids) }
+        _id: { $in: t.Array(t.String).check(ids) }
       }, {
-        $addToSet: { tag: { $each: Array(String).check(tags) } }
+        $addToSet: { tag: { $each: t.Array(t.String).check(tags) } }
       })
 
       return {
@@ -297,9 +326,9 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
     }, async (req) => {
       const { ids, tags } = req.body
       await PostModel.updateMany({
-        _id: { $in: Array(String).check(ids) }
+        _id: { $in: t.Array(t.String).check(ids) }
       }, {
-        $pullAll: { tag: Array(String).check(tags) }
+        $pullAll: { tag: t.Array(t.String).check(tags) }
       })
     })
   }
