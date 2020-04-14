@@ -268,6 +268,7 @@ export default class Editor extends Vue {
       slug: header.slug,
       date: header.date,
       excerpt: this.excerptHtml,
+      remaining: this.remainingHtml,
       raw: this.markdown,
       header
     }
