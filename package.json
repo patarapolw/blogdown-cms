@@ -18,7 +18,8 @@
     "eslint-plugin-vue": "^6.2.2"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "cd packages/server && npm i && npm build"
   },
   "repository": {
     "type": "git",
@@ -30,5 +31,8 @@
   "bugs": {
     "url": "https://github.com/patarapolw/blogdown-cms/issues"
   },
-  "homepage": "https://github.com/patarapolw/blogdown-cms#readme"
+  "homepage": "https://github.com/patarapolw/blogdown-cms#readme",
+  "cacheDirectories": [
+    "packages/server/node_modules"
+  ]
 }
