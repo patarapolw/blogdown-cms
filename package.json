@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "build": "webpack",
+    "admin": "npm run dev:back",
     "dev:back": "ADMIN=1 ts-node-dev src/index.ts",
     "dev:front": "cd packages/admin-frontend && npm run serve",
     "dev": "concurrently npm:dev:*",
