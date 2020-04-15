@@ -6,7 +6,8 @@
     "dev": "npm run serve",
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "preinstall": "if command -v check-npm-yarn > /dev/null; then check-npm-yarn; fi"
+    "preinstall": "if command -v check-npm-yarn > /dev/null; then check-npm-yarn; fi",
+    "heroku-postbuild": "echo 'Skip build on Heroku'"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.26",
