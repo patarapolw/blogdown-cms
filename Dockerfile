@@ -1,6 +1,6 @@
 FROM node:12-alpine
 RUN mkdir -p /app
-COPY . /app
+COPY packages/server /app
 WORKDIR /app
 RUN npm i
 RUN npm run build

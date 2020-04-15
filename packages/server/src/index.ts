@@ -46,7 +46,7 @@ import router from './router'
 
   if (process.env.ADMIN) {
     app.register(fastifyStatic, {
-      root: path.resolve('packages/admin-frontend/dist')
+      root: path.resolve('../admin-frontend/dist')
     })
     app.get('*', (req, reply) => {
       reply.sendFile('index.html')
