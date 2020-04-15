@@ -1,8 +1,8 @@
 /// <reference path="./reveal.d.ts" />
 import { Serialize } from 'any-serialize'
-import MakeHtml from '@patarapolw/blogdown-make-html'
+import MakeHtml from '@/assets/make-html'
 
-import { Matter } from './utils'
+import { Matter } from './assets/utils'
 import './reveal.scss'
 
 const currentSlide = location.hash

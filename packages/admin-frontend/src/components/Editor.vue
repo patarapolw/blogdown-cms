@@ -31,7 +31,7 @@ import Ajv from 'ajv'
 import yaml from 'js-yaml'
 
 import api from '../api'
-import { normalizeArray, stringSorter, Matter } from '../utils'
+import { normalizeArray, stringSorter, Matter } from '../assets/utils'
 
 declare global {
   namespace CodeMirror {

@@ -75,7 +75,7 @@ import { Component, Vue, Watch, Prop } from 'vue-property-decorator'
 import dayjs from 'dayjs'
 
 import api from '../api'
-import { normalizeArray, stringSorter } from '../utils'
+import { normalizeArray, stringSorter } from '../assets/utils'
 
 @Component
 export default class Query extends Vue {

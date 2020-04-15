@@ -14,9 +14,9 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
-import MakeHtml from '@patarapolw/blogdown-make-html'
 
-import { Matter } from '../utils'
+import MakeHtml from '../assets/make-html'
+import { Matter } from '../assets/utils'
 
 @Component
 export default class EditorPreview extends Vue {

@@ -6,15 +6,15 @@
     "dev": "npm run serve",
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "preinstall": "is-npm && npx npm-force-resolutions"
+    "preinstall": "if command -v check-npm-yarn > /dev/null; then check-npm-yarn; fi"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.26",
     "@fortawesome/free-brands-svg-icons": "^5.12.0",
     "@fortawesome/free-solid-svg-icons": "^5.12.0",
     "@fortawesome/vue-fontawesome": "^0.1.9",
-    "@patarapolw/blogdown-make-html": "file:../make-html",
     "@types/codemirror": "^0.0.83",
+    "@types/highlight.js": "^9.12.3",
     "@types/hyperscript": "^0.0.3",
     "ajv": "^6.12.0",
     "any-serialize": "^1.4.12",
@@ -22,6 +22,9 @@
     "buefy": "^0.8.10",
     "core-js": "^3.4.4",
     "dayjs": "^1.8.19",
+    "handlebars": "^4.7.6",
+    "highlight.js": "^9.18.1",
+    "highlightjs-vue": "git+https://github.com/patarapolw/highlightjs-vue.git",
     "htmlparser2": "^4.1.0",
     "hyperpug": "^1.1.1",
     "hyperscript": "^2.0.2",
@@ -52,8 +55,5 @@
   "browserslist": [
     "> 1%",
     "last 2 versions"
-  ],
-  "resolutions": {
-    "minimist": ">=1.2.3"
-  }
+  ]
 }
