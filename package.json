@@ -19,7 +19,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "cd packages/server && npm i && npm build"
+    "build": "cd packages/server && npm i && npm run build"
   },
   "repository": {
     "type": "git",
