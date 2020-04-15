@@ -20,6 +20,7 @@
   "license": "MIT",
   "dependencies": {
     "any-serialize": "^1.4.12",
+    "handlebars": "^4.7.6",
     "highlight.js": "^9.18.1",
     "highlightjs-vue": "git+https://github.com/patarapolw/highlightjs-vue.git",
     "hyperpug": "^1.1.1",
