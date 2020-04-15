@@ -1,4 +1,0 @@
-devServer:
-  port: 8000
-grayMatter:
-  excerptSeparator: <!-- excerpt_separator -->

@@ -10,7 +10,6 @@ const configSchema = Record({
 })
 
 export let config: Static<typeof configSchema>
-declare const __excerptSeparator__: string
 
 if (process.env.ADMIN) {
   config = configSchema.check(require('js-yaml').safeLoad(fs.readFileSync(
@@ -20,7 +19,7 @@ if (process.env.ADMIN) {
 } else {
   config = {
     grayMatter: {
-      excerptSeparator: '__excerptSeparator__' || '<!-- excerpt_separator -->'
+      excerptSeparator: '<!-- excerpt_separator -->'
     }
   }
 }

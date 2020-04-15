@@ -25,7 +25,7 @@ import router from './router'
             return Object.entries(obj)
               .map(([k, v]) => [k, trimmer(v)])
               .reduce((prev, [k, v]) => ({ ...prev, [k]: v }), {})
-          } else if (obj.constructor === Buffer) {
+          } else if (obj.constructor === ArrayBuffer) {
             return
           }
         }
@@ -41,7 +41,7 @@ import router from './router'
     done()
   })
 
-  const port = parseInt(String.check(process.env.PORT))
+  const port = parseInt(process.env.PORT || '8080')
   app.register(require('fastify-cors'))
 
   if (process.env.ADMIN) {
