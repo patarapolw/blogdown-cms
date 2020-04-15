@@ -33,32 +33,6 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
     return null
   })
 
-  f.get('/tag', {
-    schema: {
-      tags: ['post'],
-      summary: 'Get all tags by category',
-      querystring: {
-        type: 'object',
-        required: ['category'],
-        properties: {
-          category: { type: 'string' }
-        }
-      }
-    }
-  }, async (req) => {
-    const { category } = req.query
-    const r = await PostModel.find({ category }).select({ tag: 1, _id: 0 })
-
-    return r.map((el) => Array.from(new Set(el.tag || [])))
-      .reduce((prev, ts) => {
-        ts.map((t) => {
-          prev[t] = (prev[t] || 0) + 1
-        })
-
-        return prev
-      }, {} as any)
-  })
-
   f.post('/', {
     schema: {
       tags: ['post'],
