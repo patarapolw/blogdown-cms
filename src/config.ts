@@ -1,26 +1,9 @@
 import path from 'path'
 import fs from 'fs-extra'
 
-import { String, Record, Static } from 'runtypes'
-
-const configSchema = Record({
-  grayMatter: Record({
-    excerptSeparator: String
-  })
-})
-
-export let config: Static<typeof configSchema>
-
-if (process.env.ADMIN) {
-  config = configSchema.check(require('js-yaml').safeLoad(fs.readFileSync(
-    path.join(__dirname, '../../../config.yaml'),
-    'utf8'
-  )))
-} else {
-  config = {
-    grayMatter: {
-      excerptSeparator: '<!-- excerpt_separator -->'
-    }
+export const config = {
+  grayMatter: {
+    excerptSeparator: '<!-- excerpt_separator -->'
   }
 }
 

@@ -5,7 +5,9 @@
   "license": "MIT",
   "scripts": {
     "build": "webpack",
-    "dev": "concurrently 'ADMIN=1 ts-node-dev src/index.ts' 'cd package/admin-frontend && npm run serve'",
+    "dev:back": "ADMIN=1 ts-node-dev src/index.ts",
+    "dev:front": "cd packages/admin-frontend && npm run serve",
+    "dev": "concurrently npm:dev:*",
     "preinstall": "if command -v check-npm-yarn > /dev/null; then check-npm-yarn; fi",
     "start": "node dist/index.js"
   },
