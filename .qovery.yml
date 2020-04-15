@@ -9,3 +9,4 @@ routers:
   - application_name: blogdown-cms
     paths:
     - /*
+
