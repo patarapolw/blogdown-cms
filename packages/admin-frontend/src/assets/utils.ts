@@ -1,5 +1,9 @@
 import yaml from 'js-yaml'
 
+export const safe = (segs: TemplateStringsArray, ...parts: string[]): string => {
+  return segs.map((seg, i) => seg + (parts[i] || '')).join('')
+}
+
 export function normalizeArray<T> (a: T | T[]): T | undefined {
   if (Array.isArray(a)) {
     return a[0]

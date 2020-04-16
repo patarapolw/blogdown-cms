@@ -5,13 +5,64 @@ import hljs from 'highlight.js'
 import { elementOpen, elementClose, patch } from 'incremental-dom'
 import hljsDefineVue from 'highlightjs-vue'
 import hbs from 'handlebars'
+import { IPageMetadata } from 'page-metadata-parser'
+import h from 'hyperscript'
 
 import { makeIncremental } from './make-incremental'
+import { getMetadata } from './metadata'
+
+const aCardMap = new Map<string, IPageMetadata>()
 
 hljsDefineVue(hljs)
 
+hbs.registerHelper('card', (s) => {
+  return `<a-card href="${s}">${s}</a-card>`
+})
+
 hbs.registerHelper('github', (s) => {
-  return `Visit <a href="https://github.com/${s}" target="_blank">${s}</a>.`
+  return `<a-card href="https://github.com/${s}" img-position="left">${s}</a-card>`
+})
+
+hbs.registerHelper('youtube', (s) => {
+  return `
+  <iframe
+    width="560" height="315"
+    src="https://www.youtube.com/embed/${s}"
+    frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen
+  ></iframe>`.replace(/\n/g, ' ')
+})
+
+hbs.registerHelper('speak', (s) => {
+  return `
+  <iframe
+    src="https://speak-btn.now.sh/btn?q=${encodeURIComponent(s)}&lang=zh"
+    style="width: 20px; height: 20px;"
+    frameborder="0" allowtransparency="true"
+  ></iframe>`.replace(/\n/g, ' ')
+})
+
+hbs.registerHelper('reveal', (s) => {
+  return `
+  <iframe
+    class="blogdown-reveal"
+    src="${process.env.BASE_URL || ''}/reveal.html?key=${encodeURIComponent(s)}"
+  ></iframe>`.replace(/\n/g, ' ')
+})
+
+hbs.registerHelper('pdf', (s) => {
+  return `
+  <iframe
+    class="blogdown-pdf"
+    src="${s}"
+  ></iframe>`.replace(/\n/g, ' ')
+})
+
+hbs.registerHelper('gpdf', (s) => {
+  return `
+  <iframe
+    class="blogdown-pdf blogdown-gpdf"
+    src="https://drive.google.com/file/d/${s}/preview"
+  ></iframe>`.replace(/\n/g, ' ')
 })
 
 export default class MakeHtml {
@@ -57,7 +108,7 @@ export default class MakeHtml {
     })
   }
 
-  render (dom: Element, s: string) {
+  render (dom: HTMLElement, s: string) {
     try {
       this.html = this._mdConvert(s)
     } catch (e) {}
@@ -70,6 +121,7 @@ export default class MakeHtml {
           elementClose('div')
         } catch (_) {}
       })
+      this._postrender(dom)
     } catch (_) {}
   }
 
@@ -82,11 +134,101 @@ export default class MakeHtml {
     output.className = this.id
     output.innerHTML = this.html
 
+    this._postrender(output)
+
     return output
   }
 
   private _prerender (s: string) {
     return hbs.compile(s)({})
+  }
+
+  private _postrender (dom: HTMLElement) {
+    dom.querySelectorAll('a-card').forEach(async (el) => {
+      const href = el.getAttribute('href')
+      const imgPos = el.getAttribute('img-position')
+
+      if (href) {
+        const meta = aCardMap.get('href') || await getMetadata(href)
+        const img = h('img', {
+          src: meta.image,
+          alt: meta.title || meta.url,
+          style: {
+            width: '100%',
+            height: 'auto',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            position: 'absolute'
+          },
+          onload: (evt: any) => {
+            const { target } = evt
+
+            const hEl = target.clientHeight
+            const hParent = target.parent.clientHeight
+
+            if (hParent > hEl) {
+              target.style.width = 'auto'
+              target.style.height = '100%'
+            }
+          }
+        })
+
+        el.textContent = ''
+        el.append(
+          h('a.card', {
+            href: meta.url,
+            alt: meta.title || meta.url,
+            target: '_blank',
+            style: {
+              width: '100%',
+              flexDirection: imgPos === 'left'
+                ? 'row' : 'column',
+              display: 'flex'
+            }
+          }, [
+            ...(meta.image && img ? [
+              h('div', {
+                className: imgPos === 'left' ? '' : 'card-image',
+                style: {
+                  'margin-left': '1.5rem'
+                }
+              }, [
+                h('figure.image', {
+                  style: {
+                    overflow: 'hidden',
+                    paddingTop: imgPos === 'left'
+                      ? '50%' : '30%',
+                    height: imgPos === 'left'
+                      ? '100%' : '200px',
+                    width: imgPos === 'left'
+                      ? '100px' : 'auto'
+                  }
+                }, [
+                  img
+                ])
+              ])
+            ] : []),
+            h('.card-content', [
+              h('.content', meta.title
+                ? h('h4', {
+                  style: {
+                    color: 'darkblue'
+                  }
+                }, meta.title)
+                : h('p.subtitle.is-6', {
+                  style: {
+                    color: 'darkblue'
+                  }
+                }, meta.url)),
+              ...(meta.description ? [
+                h('.content', meta.description)
+              ] : [])
+            ])
+          ])
+        )
+      }
+    })
   }
 
   private _pugConvert (s: string) {
@@ -98,23 +240,14 @@ export default class MakeHtml {
     const body = document.createElement('body')
     body.innerHTML = html
 
-    body.querySelectorAll('reveal').forEach((el) => {
-      const src = el.getAttribute('src') || ''
+    body.querySelectorAll('iframe').forEach((el) => {
+      const w = el.width
+      const h = el.height
 
-      el.replaceWith(Object.assign(document.createElement('iframe'), {
-        src: `/reveal.html?id=${src}`,
-        className: 'reveal-viewer'
-      }))
-    })
+      const style = getComputedStyle(el)
 
-    body.querySelectorAll('pdf').forEach((el) => {
-      const src = el.getAttribute('src') || ''
-      const type = el.getAttribute('type')
-
-      el.replaceWith(Object.assign(document.createElement('iframe'), {
-        src: type === 'google-drive' ? `https://drive.google.com/file/d/${src}/preview` : src,
-        className: 'pdf-viewer'
-      }))
+      el.style.width = el.style.width || style.width || (w ? `${w}px` : '')
+      el.style.height = el.style.height || style.height || (h ? `${h}px` : '')
     })
 
     body.querySelectorAll('pre code').forEach((el) => {

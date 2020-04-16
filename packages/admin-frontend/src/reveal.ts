@@ -282,7 +282,7 @@ export class RevealMd {
     }
   }
 
-  parseSlide (dom: Element, text: string) {
+  parseSlide (dom: HTMLElement, text: string) {
     const id = 'slide-' + ser.hash(text)
     const maker = new MakeHtml(id)
     maker.render(dom, text)
@@ -294,13 +294,13 @@ export class RevealMd {
 
     if (typeof y === 'number') {
       if (hSlide) {
-        return Array.from(hSlide.children).filter((el) => el.tagName.toLocaleUpperCase() === 'SECTION')[y]
+        return Array.from(hSlide.children).filter((el) => el.tagName.toLocaleUpperCase() === 'SECTION')[y] as HTMLElement
       }
 
       return undefined
     }
 
-    return hSlide
+    return hSlide as HTMLElement
   }
 }
 

@@ -21,7 +21,11 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
       }
     }
   }, async (req) => {
-    const r = await PostModel.findOne(JSON.parse(JSON.stringify({ _id: req.query.id, slug: req.query.slug })))
+    const r = await PostModel
+      .findOne(JSON.parse(JSON.stringify({ _id: req.query.id, slug: req.query.slug })))
+      // .select({
+      //   raw: 0
+      // })
     if (r) {
       return {
         ...r.toJSON(),
@@ -97,6 +101,11 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
       {
         $match: q
       },
+      // {
+      //   $project: {
+      //     raw: 0
+      //   }
+      // },
       ...(projection ? [
         {
           $project: projection
