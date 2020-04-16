@@ -4,6 +4,12 @@ Content Management System, to provide API endpoints for Static Site Generators o
 
 ![App preview](/docs/preview.gif)
 
+## Features
+
+- [Extended markdown](/packages/admin-frontend/src/assets/make-html/index.ts#L69)
+- [Extended with Handlebars](/packages/admin-frontend/src/assets/make-html/index.ts)
+  - For example `{{{github 'patarapolw/blogdown-cms'}}}`
+
 ## How it works
 
 This project uses the following endpoints
