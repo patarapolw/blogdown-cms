@@ -12,7 +12,14 @@ import router from './router'
 
   const app = fastify({
     logger: {
-      prettyPrint: true
+      prettyPrint: (() => {
+        try {
+          require.resolve('pino-pretty')
+          return true
+        } catch (_) {}
+
+        return false
+      })()
     }
   })
   app.addHook('preHandler', function (req, reply, done) {

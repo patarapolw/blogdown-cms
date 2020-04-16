@@ -4,3 +4,4 @@
 !*.vue
 node_modules
 /heroku-dist/
+dist

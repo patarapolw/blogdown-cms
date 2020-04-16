@@ -2,37 +2,41 @@
   "name": "blogdown-cms",
   "version": "1.0.0",
   "description": "Content Management System, to provide API endpoints for Static Site Generators or JAMStacks",
+  "keywords": [
+    "cms",
+    "markdown"
+  ],
+  "homepage": "https://github.com/patarapolw/blogdown-cms#readme",
+  "bugs": {
+    "url": "https://github.com/patarapolw/blogdown-cms/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/patarapolw/blogdown-cms.git"
+  },
+  "license": "ISC",
+  "author": "",
   "main": ".eslintrc.js",
   "directories": {
     "doc": "docs"
   },
+  "scripts": {
+    "build": "docker build -t blogdown .",
+    "dev": "concurrently 'cd packages/server && npm run dev' 'cd packages/admin-frontend && npm run serve'",
+    "start": "docker run -p 8080:8080 blogdown",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^2.24.0",
     "@typescript-eslint/parser": "^2.24.0",
+    "concurrently": "^5.1.0",
     "eslint": "^6.8.0",
     "eslint-config-standard": "^14.1.0",
     "eslint-plugin-import": "^2.20.1",
     "eslint-plugin-node": "^11.0.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
-    "eslint-plugin-vue": "^6.2.2"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "cd packages/server && npm i && npm run build"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/patarapolw/blogdown-cms.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/patarapolw/blogdown-cms/issues"
-  },
-  "homepage": "https://github.com/patarapolw/blogdown-cms#readme",
-  "cacheDirectories": [
-    "packages/server/node_modules"
-  ]
+    "eslint-plugin-vue": "^6.2.2",
+    "typescript": "^3.8.3"
+  }
 }
