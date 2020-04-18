@@ -33,8 +33,8 @@ export default class EditorPreview extends Vue {
 
   matter = new Matter()
 
-  get makeHtml () {
-    return new MakeHtml(this.guid)
+  makeHtml (side: 'front' | 'back') {
+    return new MakeHtml(this.guid + '-' + side)
   }
 
   mounted () {
@@ -48,7 +48,7 @@ export default class EditorPreview extends Vue {
   }
 
   @Watch('markdown')
-  onMarkdownChanged () {
+  async onMarkdownChanged () {
     const { excerpt, remaining } = this.$refs as any
     const { header, content: md } = this.matter.parse(this.markdown)
     this.image = header.image
@@ -56,17 +56,22 @@ export default class EditorPreview extends Vue {
     // @ts-ignore
     const [excerptMd, remainingMd = ''] = md.split(process.env.VUE_APP_MATTER_EXCERPT_SEPARATOR!)
 
-    if (excerpt) {
-      this.makeHtml.render(excerpt, excerptMd)
-      this.$emit('excerpt', excerpt.innerHTML)
-    }
+    await Promise.all([
+      (async () => {
+        if (excerpt) {
+          await this.makeHtml('front').render(excerpt, excerptMd)
+          this.$emit('excerpt', excerpt.innerHTML)
+        }
+      })(),
+      (async () => {
+        if (remaining) {
+          await this.makeHtml('back').render(remaining, remainingMd)
+          this.$emit('remaining', remaining.innerHTML)
 
-    if (remaining) {
-      this.makeHtml.render(remaining, remainingMd)
-      this.$emit('remaining', remaining.innerHTML)
-
-      this.hasRemaining = !!remainingMd
-    }
+          this.hasRemaining = !!remainingMd
+        }
+      })()
+    ])
   }
 
   @Watch('scrollSize')

@@ -4,10 +4,10 @@ import stylis from 'stylis'
 import hljs from 'highlight.js'
 import { elementOpen, elementClose, patch } from 'incremental-dom'
 import hljsDefineVue from 'highlightjs-vue'
-import hbs from 'handlebars'
-import { IPageMetadata } from 'page-metadata-parser'
 import h from 'hyperscript'
+import { IPageMetadata } from 'page-metadata-parser'
 
+import { liquid } from './template'
 import { makeIncremental } from './make-incremental'
 import { getMetadata } from './metadata'
 
@@ -15,60 +15,9 @@ const aCardMap = new Map<string, IPageMetadata>()
 
 hljsDefineVue(hljs)
 
-hbs.registerHelper('card', (s) => {
-  return `<a-card href="${s}">${s}</a-card>`
-})
-
-hbs.registerHelper('github', (s) => {
-  return `<a-card href="https://github.com/${s}" img-position="left">${s}</a-card>`
-})
-
-hbs.registerHelper('youtube', (s) => {
-  return `
-  <iframe
-    width="560" height="315"
-    src="https://www.youtube.com/embed/${s}"
-    frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen
-  ></iframe>`.replace(/\n/g, ' ')
-})
-
-hbs.registerHelper('speak', (s) => {
-  return `
-  <iframe
-    src="https://speak-btn.now.sh/btn?q=${encodeURIComponent(s)}&lang=zh"
-    style="width: 20px; height: 20px;"
-    frameborder="0" allowtransparency="true"
-  ></iframe>`.replace(/\n/g, ' ')
-})
-
-hbs.registerHelper('reveal', (s) => {
-  return `
-  <iframe
-    class="blogdown-reveal"
-    src="${process.env.BASE_URL || ''}/reveal.html?key=${encodeURIComponent(s)}"
-  ></iframe>`.replace(/\n/g, ' ')
-})
-
-hbs.registerHelper('pdf', (s) => {
-  return `
-  <iframe
-    class="blogdown-pdf"
-    src="${s}"
-  ></iframe>`.replace(/\n/g, ' ')
-})
-
-hbs.registerHelper('gpdf', (s) => {
-  return `
-  <iframe
-    class="blogdown-pdf blogdown-gpdf"
-    src="https://drive.google.com/file/d/${s}/preview"
-  ></iframe>`.replace(/\n/g, ' ')
-})
-
 export default class MakeHtml {
   md = new showdown.Converter({
     parseImgDimensions: true,
-    simplifiedAutoLink: true,
     strikethrough: true,
     tables: true,
     backslashEscapesHTMLTags: true,
@@ -76,6 +25,7 @@ export default class MakeHtml {
     literalMidWordUnderscores: true,
     smoothLivePreview: true,
     simpleLineBreaks: true,
+    disableForced4SpacesIndentedSublists: true,
     metadata: true
   })
 
@@ -108,7 +58,7 @@ export default class MakeHtml {
     })
   }
 
-  render (dom: HTMLElement, s: string) {
+  async render (dom: HTMLElement, s: string) {
     try {
       this.html = this._mdConvert(s)
     } catch (e) {}
@@ -121,7 +71,8 @@ export default class MakeHtml {
           elementClose('div')
         } catch (_) {}
       })
-      this._postrender(dom)
+      const d1 = await this._postrender(dom)
+      this.html = d1.innerHTML
     } catch (_) {}
   }
 
@@ -140,12 +91,28 @@ export default class MakeHtml {
   }
 
   private _prerender (s: string) {
-    return hbs.compile(s)({})
+    return liquid.parseAndRenderSync(s) || s
   }
 
-  private _postrender (dom: HTMLElement) {
-    dom.querySelectorAll('a-card').forEach(async (el) => {
-      const href = el.getAttribute('href')
+  private async _postrender (dom: HTMLElement) {
+    dom.querySelectorAll('iframe').forEach((el) => {
+      const w = el.width
+      const h = el.height
+
+      const style = getComputedStyle(el)
+
+      el.style.width = el.style.width || style.width || (w ? `${w}px` : '')
+      el.style.height = el.style.height || style.height || (h ? `${h}px` : '')
+    })
+
+    dom.querySelectorAll('pre code').forEach((el) => {
+      hljs.highlightBlock(el)
+    })
+
+    await Promise.all(Array.from(dom.querySelectorAll('a[is="a-card"]')).map(async (el) => {
+      const a = el as HTMLAnchorElement
+
+      const href = a.href
       const imgPos = el.getAttribute('img-position')
 
       if (href) {
@@ -164,25 +131,26 @@ export default class MakeHtml {
           onload: (evt: any) => {
             const { target } = evt
 
-            const hEl = target.clientHeight
-            const hParent = target.parent.clientHeight
+            if (target && target.parent) {
+              const hEl = target.clientHeight
+              const hParent = target.parent.clientHeight
 
-            if (hParent > hEl) {
-              target.style.width = 'auto'
-              target.style.height = '100%'
+              if (hParent > hEl) {
+                target.style.width = 'auto'
+                target.style.height = '100%'
+              }
             }
           }
         })
 
+        a.setAttribute('alt', meta.title || meta.url)
+
         el.textContent = ''
         el.append(
-          h('a.card', {
-            href: meta.url,
-            alt: meta.title || meta.url,
-            target: '_blank',
+          h('.card', {
             style: {
               width: '100%',
-              flexDirection: imgPos === 'left'
+              'flex-direction': imgPos === 'left'
                 ? 'row' : 'column',
               display: 'flex'
             }
@@ -197,12 +165,14 @@ export default class MakeHtml {
                 h('figure.image', {
                   style: {
                     overflow: 'hidden',
-                    paddingTop: imgPos === 'left'
+                    'padding-top': imgPos === 'left'
                       ? '50%' : '30%',
                     height: imgPos === 'left'
                       ? '100%' : '200px',
                     width: imgPos === 'left'
-                      ? '100px' : 'auto'
+                      ? '100px' : 'auto',
+                    margin: imgPos === 'left'
+                      ? '0' : ''
                   }
                 }, [
                   img
@@ -228,7 +198,9 @@ export default class MakeHtml {
           ])
         )
       }
-    })
+    }))
+
+    return dom
   }
 
   private _pugConvert (s: string) {
@@ -236,25 +208,8 @@ export default class MakeHtml {
   }
 
   private _mdConvert (s: string) {
-    const html = this.md.makeHtml(this._prerender(s))
-    const body = document.createElement('body')
-    body.innerHTML = html
-
-    body.querySelectorAll('iframe').forEach((el) => {
-      const w = el.width
-      const h = el.height
-
-      const style = getComputedStyle(el)
-
-      el.style.width = el.style.width || style.width || (w ? `${w}px` : '')
-      el.style.height = el.style.height || style.height || (h ? `${h}px` : '')
-    })
-
-    body.querySelectorAll('pre code').forEach((el) => {
-      hljs.highlightBlock(el)
-    })
-
-    return body.innerHTML
+    const html = this.md.makeHtml(s)
+    return this._prerender(html)
   }
 
   private _makeCss (s: string) {
