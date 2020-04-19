@@ -1,0 +1,9 @@
+.stack.present {
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+
+  > .present {
+    top: unset !important;
+  }
+}
