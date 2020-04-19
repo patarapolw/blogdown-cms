@@ -15,7 +15,7 @@ import { tmpDir } from '../config'
 
 dotenv.config()
 
-export default (f: FastifyInstance, opts: any, next: () => void) => {
+export default (f: FastifyInstance, _: any, next: () => void) => {
   let gridFS: GridFSBucket | null = null
 
   if (process.env.CLOUDINARY_API_SECRET) {

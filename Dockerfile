@@ -1,8 +1,9 @@
 FROM node:12-alpine
 RUN mkdir -p /app
-COPY packages/server /app
 WORKDIR /app
+COPY packages/server/package.json /app
 RUN npm i
+COPY packages/server /app
 RUN npm run build
 RUN npm prune
 EXPOSE 8080

@@ -4,13 +4,12 @@ import swagger from 'fastify-oas'
 import mediaRouter from './media'
 import postRouter from './post'
 
-const router = (f: FastifyInstance, opts: any, next: () => void) => {
+const router = (f: FastifyInstance, _: any, next: () => void) => {
   f.register(swagger, {
     routePrefix: '/doc',
     swagger: {
       info: {
         title: 'Swagger API',
-        description: 'MD-edit Swagger API',
         version: '0.1.0'
       },
       consumes: ['application/json'],
@@ -30,7 +29,17 @@ const router = (f: FastifyInstance, opts: any, next: () => void) => {
             scheme: 'bearer'
           }
         }
-      }
+      },
+      servers: [
+        {
+          url: 'https://patarapolw-blogdown.herokuapp.com',
+          description: 'Online server'
+        },
+        {
+          url: 'http://localhost:8080',
+          description: 'Local server'
+        }
+      ]
     },
     exposeRoute: true
   })

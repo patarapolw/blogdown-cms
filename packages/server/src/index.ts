@@ -2,7 +2,6 @@ import path from 'path'
 
 import fastify from 'fastify'
 import fastifyStatic from 'fastify-static'
-import { String } from 'runtypes'
 
 import { mongooseConnect } from './db'
 import router from './router'
@@ -22,7 +21,7 @@ import router from './router'
       })()
     }
   })
-  app.addHook('preHandler', function (req, reply, done) {
+  app.addHook('preHandler', function (req, _, done) {
     if (req.body) {
       const trimmer = (obj: any): any => {
         if (obj) {
@@ -55,7 +54,7 @@ import router from './router'
     app.register(fastifyStatic, {
       root: path.resolve('../admin-frontend/dist')
     })
-    app.get('*', (req, reply) => {
+    app.get('*', (_, reply) => {
       reply.sendFile('index.html')
     })
   }

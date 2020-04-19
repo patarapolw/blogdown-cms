@@ -5,7 +5,7 @@ import QSearch from '@patarapolw/qsearch'
 
 import { PostModel, Post } from '../db'
 
-export default (f: FastifyInstance, opts: any, next: () => void) => {
+export default (f: FastifyInstance, _: any, next: () => void) => {
   const slugify = new Slugify()
 
   f.get('/', {
@@ -43,9 +43,8 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
       summary: 'Query for posts',
       body: {
         type: 'object',
-        required: ['q'],
         properties: {
-          q: { type: ['string', 'object'] },
+          q: { type: 'string' },
           cond: { type: 'object' },
           offset: { type: 'number' },
           limit: { type: 'number' },
@@ -69,22 +68,20 @@ export default (f: FastifyInstance, opts: any, next: () => void) => {
       }
     }
   }, async (req) => {
-    let { q, cond, offset, limit, sort, projection, count } = req.body
+    let { q = '', cond, offset, limit, sort, projection, count } = req.body
 
-    if (typeof q === 'string') {
-      const qSearch = new QSearch({
-        dialect: 'mongodb',
-        schema: {
-          slug: {},
-          date: { type: 'date' },
-          title: {},
-          tag: {},
-          excerpt: {},
-          category: {}
-        }
-      })
-      q = qSearch.parse(q).cond
-    }
+    const qSearch = new QSearch({
+      dialect: 'mongodb',
+      schema: {
+        slug: {},
+        date: { type: 'date' },
+        title: {},
+        tag: {},
+        excerpt: {},
+        category: {}
+      }
+    })
+    q = qSearch.parse(q).cond
 
     if (cond) {
       q = {
