@@ -41,18 +41,14 @@ export default class App extends Vue {
 
   @Watch('$store.state.isLoading')
   onLoading () {
-    // @ts-ignore
     this.isBlocked = this.$store.state.isLoading
   }
 
   onBlockedClick () {
     this.isBlocked = false
-    // @ts-ignore
-    this.$toast.add({
-      severity: 'warning',
-      summary: 'API loading',
-      detail: 'API is loading in background',
-      life: 3000
+    this.$message({
+      type: 'warning',
+      message: 'API is loading in background'
     })
   }
 }

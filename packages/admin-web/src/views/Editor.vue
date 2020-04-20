@@ -1,26 +1,19 @@
 <template lang="pug">
-.container
-  .columns.editor
-    .column(
-      style="max-height: 100%; overflow-y: scroll;"
-      :class="hasPreview ? 'is-6' : 'is-12'"
-      @scroll="onScroll"
+el-row.editor
+  el-col.editor-col(:span="hasPreview ? 12 : 24" @scroll="onScroll")
+    .title-nav
+      div(style="margin-right: 1em;")
+        span(v-if="isLoading || title") {{title}}
+        span(v-else style="color: red;") {{noTitle}}
+      div(style="flex-grow: 1;")
+      el-button.is-warning(@click="hasPreview = !hasPreview") {{hasPreview ? 'Hide' : 'Show'}} Preview
+      el-button.is-success(:disabled="!title || !isEdited" @click="save") Save
+    codemirror(v-model="markdown" ref="codemirror" @input="onCmCodeChange")
+  el-col(v-if="hasPreview" :span="12")
+    RevealPreview(v-if="type === 'reveal'" :id="id" :markdown="markdown" :cursor="cursor")
+    EditorPreview(v-else :title="title" :id="id" :markdown="markdown" :scrollSize="scrollSize"
+      @excerpt="excerptHtml = $event" @remaining="remainingHtml = $event"
     )
-      .card(aria-id="header" style="margin-bottom: 1em;")
-        .card-header(style="align-items: center;")
-          p.card-header-title
-            span(v-if="isLoading || title") {{title}}
-            span.has-text-danger(v-else) {{noTitle}}
-          div(style="flex-grow: 1;")
-          .buttons.header-buttons(@click.stop style="margin-right: 1em; white-space: nowrap; display: block;")
-            b-button.is-warning(@click="hasPreview = !hasPreview") {{hasPreview ? 'Hide' : 'Show'}} Preview
-            b-button.is-success(:disabled="!title || !isEdited" @click="save") Save
-      codemirror(v-model="markdown" ref="codemirror" @input="onCmCodeChange")
-    .column.is-6(v-if="hasPreview")
-      RevealPreview(v-if="type === 'reveal'" :id="id" :markdown="markdown" :cursor="cursor")
-      EditorPreview(v-else :title="title" :id="id" :markdown="markdown" :scrollSize="scrollSize"
-        @excerpt="excerptHtml = $event" @remaining="remainingHtml = $event"
-      )
 </template>
 
 <script lang="ts">
@@ -294,7 +287,7 @@ export default class Editor extends Vue {
       })
     }
 
-    // this.$buefy.snackbar.open('Saved')
+    this.$message('Saved')
 
     setTimeout(() => {
       this.isEdited = false
@@ -330,13 +323,25 @@ export default class Editor extends Vue {
 }
 
 .editor {
-  margin-top: 1em;
-  max-height: 90vh;
-  height: 90vh;
-}
+  flex-grow: 1;
 
-.vue-codemirror {
-  display: grid;
+  .title-nav {
+    display: flex;
+    padding: 10px;
+    background-color: #ffeaa7;
+    align-items: center;
+  }
+
+  .editor-col {
+    height: 100%;
+    overflow-y: scroll;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .vue-codemirror {
+    flex-grow: 1;
+  }
 }
 
 .CodeMirror-lines {

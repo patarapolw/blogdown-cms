@@ -1,72 +1,38 @@
 <template lang="pug">
 .container.query-view
-  .pure-menu.pure-menu-horizontal(style="display: flex; padding-right: 1em; margin-bottom: 1em;")
-    div(style="flex-grow: 1;")
-    ul.pure-menu-list
-      li.pure-menu-item
-        router-link.pure-button(:to="getTo()") New
-    ul.pure-menu-list
-      li.pure-menu-item
-        button.pure-button(@click="load") Reload
-    ul.pure-menu-list
-      li.pure-menu-item.pure-menu-has-children(:class="checked.length === 0 ? '' : 'pure-menu-allow-hover'")
-        .pure-menu-link Batch Edit
-        ul.pure-menu-children
-          li.pure-menu-item
-            .cursor-pointer.pure-menu-link(role="button" @click="isEditTagsDialog = true") Edit tags
-            .cursor-pointer.pure-menu-link(role="button" @click="doDelete") Delete
-  p-data-table(:value="items" paginator
-      :rows="perPage" :total-records="count")
-    p-column(field="slug" header="Slug" header-style="width: 200px;")
-    p-column(field="title" header="Title" sortable)
-    p-column(field="date" header="Date" sortable header-style="width: 250px;")
-    p-column(field="category" header="Category" sortable header-style="width: 200px;")
-    p-column(field="tag" header="Tag" header-style="width: 200px;")
-  //- .columns
-  //-   .column
-  //-     b-table.query-table(
-  //-       :data="items"
-  //-       :loading="isLoading"
-  //-       detailed
-
-  //-       :selected.sync="selected"
-  //-       @select="openItem($event)"
-
-  //-       checkable
-  //-       :checked-rows.sync="checked"
-  //-       @check="onTableChecked"
-
-  //-       paginated
-  //-       backend-pagination
-  //-       :total="count"
-  //-       :per-page="perPage"
-  //-       @page-change="onPageChanged"
-  //-       :current-page="page"
-
-  //-       backend-sorting
-  //-       :default-sort="[sort.key, sort.type]"
-  //-       @sort="onSort"
-  //-     )
-  //-       template(slot-scope="props")
-  //-         b-table-column(v-for="h in headers" :key="h.field"
-  //-             :label="h.label" :width="h.width" :sortable="h.sortable")
-  //-           span(v-if="h.field === 'tag'")
-  //-             b-taglist
-  //-               b-tag(v-for="t in props.row.tag" :key="t") {{t}}
-  //-           span(v-else) {{props.row[h.field]}}
-  //-       template(slot="detail" slot-scope="props")
-  //-         .container(style="max-width: 800px; max-height: 300px; overflow: scroll;")
-  //-           .content(
-  //-             v-html="props.row.excerpt"
-  //-             style="max-height: 300px; overflow: scroll"
-  //-             @click="openItem(props.row.id)"
-  //-           )
-  p-dialog(:visible.sync="isEditTagsDialog" modal)
-    template(#header) Edit tags
-    p-chips(v-model="tagList" separator="," :allow-duplicate="false")
-    template(#footer)
-      button.pure-button(@click="editTags") Save
-      button.pure-button(@click="isEditTagsDialog = false") Close
+  el-menu(mode="horizontal" style="display: flex;")
+    div(style="flex-grow: 1; pointer-events: none;")
+    el-menu-item(index="1")
+      router-link(to="/post/edit") New
+    el-menu-item(index="2")
+      span(role="button" @click="load()") Reload
+    el-submenu(index="3" :disabled="checked.length === 0")
+      template(slot="title") Batch Edit
+      el-menu-item.cursor-pointer(index="3-1" role="button" @click="isEditTagsDialog = true") Edit tags
+      el-menu-item.cursor-pointer(index="3-2" role="button" @click="doDelete") Delete
+  el-table(
+    :data="items" style="width: 100%"
+    :default-sort="sort" sortable="custom" @sort-change="onSort"
+    @selection-change="checked = $event"
+    @row-click="openItem($event)"
+  )
+    el-table-column(type="selection" width="50")
+    el-table-column(property="slug" label="Slug" width="200")
+    el-table-column(property="title" label="Title" sortable)
+    el-table-column(property="date" label="Date" sortable width="250")
+    el-table-column(property="category" label="Category" sortable width="200")
+    el-table-column(property="tag" label="Tag" width="200")
+      template(slot-scope="scope")
+        el-tag(v-for="t in scope.row.tag" style="margin-right: 1em;" :key="t") {{t}}
+  el-pagination(:total="count" :page-size="perPage" :current-page.sync="page")
+  el-dialog(:visible.sync="isEditTagsDialog" title="Edit tags" @close="load()")
+    el-tag(v-for="t in tagList" :key="t" closable style="margin-right: 1em;"
+      @close="removeTag($event)") {{t}}
+    el-input.input-new-tag(v-model="newTag" v-if="newTagVisible"
+      @keyup.enter.native="submitNewTag" @blur="submitNewTag")
+    el-button.button-new-tag(v-else size="small" @click="newTagVisible = true") + New Tag
+    span(slot="footer")
+      el-button(@click="isEditTagsDialog = false") Close
 </template>
 
 <script lang="ts">
@@ -78,7 +44,6 @@ import { normalizeArray, stringSorter } from '../assets/utils'
 
 @Component
 export default class Query extends Vue {
-  selected: any = null
   checked: any[] = []
 
   items: any[] = []
@@ -86,14 +51,15 @@ export default class Query extends Vue {
   filteredTags: string[] = []
   tagList: string[] = []
   sort = {
-    key: 'date',
-    type: 'desc'
+    prop: 'date',
+    order: 'descending'
   }
 
+  newTagVisible = false
   isLoading = false
   count = 0
   isEditTagsDialog = false
-  newTags = ''
+  newTag = ''
 
   perPage = 5
 
@@ -101,12 +67,25 @@ export default class Query extends Vue {
     return parseInt(normalizeArray(this.$route.query.page) || '1')
   }
 
-  get q () {
-    return this.$route.query.q || '' as string
+  set page (p: number) {
+    const { page, ...query } = this.$route.query
+
+    if (p === 1) {
+      this.$router.push({
+        query
+      })
+    } else {
+      this.$router.push({
+        query: {
+          ...query,
+          page: p.toString()
+        }
+      })
+    }
   }
 
-  getTo () {
-    return '/post/edit'
+  get q () {
+    return this.$route.query.q || '' as string
   }
 
   mounted () {
@@ -123,8 +102,8 @@ export default class Query extends Vue {
       offset: (this.page - 1) * this.perPage,
       limit: this.perPage,
       sort: {
-        key: this.sort.key,
-        desc: this.sort.type === 'desc'
+        key: this.sort.prop,
+        desc: this.sort.order === 'descending'
       },
       count: true
     })
@@ -141,18 +120,9 @@ export default class Query extends Vue {
     }))
   }
 
-  onPageChanged (p: number) {
-    this.$router.push({
-      query: {
-        ...this.$route.query,
-        page: p.toString()
-      }
-    })
-  }
-
-  onSort (key: string, type: 'desc' | 'asc') {
-    this.sort.key = key
-    this.sort.type = (type as string)
+  onSort (evt: { column: string, prop: string, order: string }) {
+    this.sort.prop = evt.prop
+    this.sort.order = evt.order
     this.load()
   }
 
@@ -196,17 +166,18 @@ export default class Query extends Vue {
     }
   }
 
-  openItem (it: any) {
+  openItem (data: any) {
     this.$router.push({
-      path: this.getTo(),
+      path: '/post/edit',
       query: {
-        id: it.id
+        id: data.id
       }
     })
   }
 
-  onTableChecked (checked: any[]) {
-    this.tagList = Array.from(new Set(checked
+  @Watch('checked')
+  onTableChecked () {
+    this.tagList = Array.from(new Set(this.checked
       .map((el) => el.tag)
       .filter((t) => t)
       .reduce((a, b) => [...a!, ...b!], [])!))
@@ -214,27 +185,43 @@ export default class Query extends Vue {
     this.$set(this, 'tagList', this.tagList)
   }
 
-  editTags () {
-    this.$nextTick(async () => {
-      await api.put('/api/post/tag', {
+  async submitNewTag () {
+    await api.patch('/api/post/tag', {
+      ids: this.checked.map((el) => el.id),
+      tags: [this.newTag]
+    })
+  }
+
+  async removeTag (evt: any) {
+    await api.delete('/api/post/tag', {
+      data: {
         ids: this.checked.map((el) => el.id),
-        tags: this.tagList
-      })
-
-      this.isEditTagsDialog = false
-
-      this.load()
+        tags: [evt]
+      }
     })
   }
 }
 </script>
 
 <style lang="scss">
-.p-dialog {
-  width: 500px;
+.button-new-tag {
+  height: 32px;
+  line-height: 30px;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
-.p-chips, .p-chips .p-inputtext {
-  width: 100%;
+.input-new-tag {
+  width: 90px;
+  vertical-align: bottom;
+
+  input {
+    height: 32px;
+    line-height: auto;
+  }
+}
+
+.query-view tr {
+  cursor: pointer;
 }
 </style>

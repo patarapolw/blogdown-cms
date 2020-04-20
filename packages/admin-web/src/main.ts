@@ -5,7 +5,7 @@ import store from './store'
 
 import './plugins/codemirror'
 import './plugins/fontawesome'
-import './plugins/primevue'
+import './plugins/element-ui'
 import './main.scss'
 
 Vue.config.productionTip = false

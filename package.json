@@ -22,7 +22,7 @@
   },
   "scripts": {
     "build": "docker build -t blogdown .",
-    "dev": "concurrently 'cd packages/server && npm run dev' 'cd packages/admin-frontend && npm run serve'",
+    "dev": "concurrently 'cd packages/server && npm run dev' 'cd packages/admin-web && npm run serve'",
     "start": "docker run -p 8080:8080 blogdown",
     "deploy": "heroku container:push web",
     "test": "echo \"Error: no test specified\" && exit 1"

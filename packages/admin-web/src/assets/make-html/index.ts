@@ -117,11 +117,7 @@ export default class MakeHtml {
           alt: meta.title || meta.url,
           style: {
             width: '100%',
-            height: 'auto',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            position: 'absolute'
+            height: 'auto'
           },
           onload: (evt: any) => {
             const { target } = evt
@@ -142,48 +138,47 @@ export default class MakeHtml {
 
         el.textContent = ''
         el.append(
-          h('.card', {
+          h('div', {
             style: {
-              width: '100%',
               'flex-direction': imgPos === 'left'
                 ? 'row' : 'column',
-              display: 'flex'
+              display: 'flex',
+              margin: '10px',
+              padding: '1em',
+              'box-sizing': 'border-box',
+              'box-shadow': '0 4px 8px 0 rgba(0, 0, 0, 0.2)'
             }
           }, [
             ...(meta.image && img ? [
               h('div', {
-                className: imgPos === 'left' ? '' : 'card-image',
                 style: {
-                  'margin-left': '1.5rem'
+                  display: 'flex',
+                  'align-items': 'center',
+                  'justify-content': 'center',
+                  ...(imgPos === 'left' ? {
+                    'max-width': '100px',
+                    'margin-right': '1em'
+                  } : {
+                    'max-height': '200px',
+                    'margin-bottom': '1em'
+                  })
                 }
               }, [
-                h('figure.image', {
-                  style: {
-                    overflow: 'hidden',
-                    'padding-top': imgPos === 'left'
-                      ? '50%' : '30%',
-                    height: imgPos === 'left'
-                      ? '100%' : '200px',
-                    width: imgPos === 'left'
-                      ? '100px' : 'auto',
-                    margin: imgPos === 'left'
-                      ? '0' : ''
-                  }
-                }, [
-                  img
-                ])
+                img
               ])
             ] : []),
             h('.card-content', [
               h('.content', meta.title
-                ? h('h4', {
+                ? h('h3', {
                   style: {
-                    color: 'darkblue'
+                    color: 'darkblue',
+                    'margin-block-start': 0
                   }
                 }, meta.title)
-                : h('p.subtitle.is-6', {
+                : h('h6', {
                   style: {
-                    color: 'darkblue'
+                    color: 'darkblue',
+                    'margin-block-start': 0
                   }
                 }, meta.url)),
               ...(meta.description ? [

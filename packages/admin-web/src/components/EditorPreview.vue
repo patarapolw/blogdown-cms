@@ -1,15 +1,20 @@
 <template lang="pug">
-.card(style="max-height: 100%; overflow-y: scroll;")
+.editor-preview
   img(v-if="image" style="max-width: 100%; width: 100%;" :src="image")
   .card-content
     h1.title {{title}}
     .content(ref="excerpt")
-    b-collapse(v-show="hasRemaining" :open="isShowRemaining" position="is-bottom" aria-id="show-remaining")
-      a(slot="trigger" slot-scope="props" aria-controls="show-remaining")
-        b-icon(:icon="!props.open ? 'angle-down' : 'angle-up'")
-        span {{ !props.open ? 'Show more' : 'Show less' }}
-      hr
-      .content(ref="remaining")
+  div(v-show="hasRemaining" style="margin-left: -1em; margin-right: -1em;")
+    .cursor-pointer(
+      style="display: flex; background-color: #dfe6e9cc; padding: 1em;"
+      @click="isRemainingShown = !isRemainingShown"
+    )
+      span {{isRemainingShown ? 'Hide' : 'Show'}} remaining
+      div(style="flex-grow: 1;")
+      span
+        fontawesome(icon="caret-down" v-if="isRemainingShown")
+        fontawesome(icon="caret-right" v-else)
+    .content(v-show="isRemainingShown" ref="remaining" style="margin: 1em;")
 </template>
 
 <script lang="ts">
@@ -28,7 +33,7 @@ export default class EditorPreview extends Vue {
   guid?: string = ''
   image?: string = ''
 
-  isShowRemaining = true
+  isRemainingShown = true
   hasRemaining = false
 
   matter = new Matter()
@@ -82,9 +87,15 @@ export default class EditorPreview extends Vue {
 </script>
 
 <style lang="scss">
-iframe[class$=-viewer] {
-  display: block;
-  width: 100%;
-  max-width: 500px;
+.editor-preview {
+  max-height: 100%;
+  overflow-y: scroll;
+  padding: 1em;
+
+  iframe[class$=-viewer] {
+    display: block;
+    width: 100%;
+    max-width: 500px;
+  }
 }
 </style>
