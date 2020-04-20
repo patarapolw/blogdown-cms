@@ -10,7 +10,7 @@ main
     .navbar-item
       form.field-inline(@submit.prevent="loadQ")
         fontawesome(icon="search")
-        input(placeholder="Search..." type="search" v-model="q" @keydown.enter="loadQ")
+        input(placeholder="Search..." type="search" v-model="q" @keydown.enter="loadQ" spellchecker="off")
     a.navbar-item(href="https://www.github.com/patarapolw/blogdown-cms" target="_blank" style="margin-right: 1em;")
       fontawesome(:icon="['fab', 'github']" size="lg")
   router-view

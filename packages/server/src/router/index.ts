@@ -3,6 +3,7 @@ import swagger from 'fastify-oas'
 
 import mediaRouter from './media'
 import postRouter from './post'
+import libRouter from './lib'
 
 const router = (f: FastifyInstance, _: any, next: () => void) => {
   f.register(swagger, {
@@ -46,6 +47,7 @@ const router = (f: FastifyInstance, _: any, next: () => void) => {
 
   if (process.env.ADMIN) {
     f.register(mediaRouter, { prefix: '/media' })
+    f.register(libRouter, { prefix: '/lib' })
   }
 
   f.register(postRouter, { prefix: '/post' })

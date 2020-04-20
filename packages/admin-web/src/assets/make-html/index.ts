@@ -4,16 +4,17 @@ import hljs from 'highlight.js'
 import { elementOpen, elementClose, patch } from 'incremental-dom'
 import hljsDefineVue from 'highlightjs-vue'
 import h from 'hyperscript'
-import { IPageMetadata } from 'page-metadata-parser'
 import MarkdownIt from 'markdown-it'
 import emoji from 'markdown-it-emoji'
 import imsize from 'markdown-it-imsize'
+import ghHeading from 'markdown-it-github-headings'
+import he from 'he'
 
 import { liquid } from './template'
 import { makeIncremental } from './make-incremental'
-import { getMetadata } from './metadata'
+import { getMetadata, IMetadata } from './metadata'
 
-const aCardMap = new Map<string, IPageMetadata>()
+const aCardMap = new Map<string, IMetadata>()
 
 hljsDefineVue(hljs)
 
@@ -46,6 +47,7 @@ export default class MakeHtml {
     })
       .use(emoji)
       .use(imsize)
+      .use(ghHeading)
 
     this.hp = new HyperPug({
       markdown: (s) => this._mdConvert(s),
@@ -107,7 +109,7 @@ export default class MakeHtml {
     await Promise.all(Array.from(dom.querySelectorAll('a[is="a-card"]')).map(async (el) => {
       const a = el as HTMLAnchorElement
 
-      const href = a.href
+      const href = el.getAttribute('href')
       const imgPos = el.getAttribute('img-position')
 
       if (href) {
@@ -134,59 +136,31 @@ export default class MakeHtml {
           }
         })
 
-        a.setAttribute('alt', meta.title || meta.url)
+        el.setAttribute('alt', meta.title || meta.url)
 
-        el.textContent = ''
-        el.append(
-          h('div', {
-            style: {
-              'flex-direction': imgPos === 'left'
-                ? 'row' : 'column',
-              display: 'flex',
-              margin: '10px',
-              padding: '1em',
-              'box-sizing': 'border-box',
-              'box-shadow': '0 4px 8px 0 rgba(0, 0, 0, 0.2)'
-            }
-          }, [
-            ...(meta.image && img ? [
-              h('div', {
-                style: {
-                  display: 'flex',
-                  'align-items': 'center',
-                  'justify-content': 'center',
-                  ...(imgPos === 'left' ? {
-                    'max-width': '100px',
-                    'margin-right': '1em'
-                  } : {
-                    'max-height': '200px',
-                    'margin-bottom': '1em'
-                  })
-                }
-              }, [
-                img
-              ])
-            ] : []),
-            h('.card-content', [
-              h('.content', meta.title
-                ? h('h3', {
-                  style: {
-                    color: 'darkblue',
-                    'margin-block-start': 0
-                  }
-                }, meta.title)
-                : h('h6', {
-                  style: {
-                    color: 'darkblue',
-                    'margin-block-start': 0
-                  }
-                }, meta.url)),
-              ...(meta.description ? [
-                h('.content', meta.description)
-              ] : [])
-            ])
-          ])
-        )
+        const card = `
+        <div style="${
+          `flex-direction: ${imgPos === 'left' ? 'row' : 'column'}; ` +
+          'display: flex; margin: 10px; padding: 1em;' +
+          'box-sizing: border-box; box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);'
+        }">
+          ${meta.image ? `
+          <div style="${
+            'display: flex; align-items: center; justify-content: center; overflow: hidden;' +
+            (imgPos === 'left'
+              ? 'max-width: 100px; margin-right: 1em;'
+              : 'max-height: 200px; margin-bottom: 1em;')
+          }">${img.outerHTML}
+          </div>` : ''}
+          <div>
+            ${meta.title
+              ? `<h3 style="color: darkblue; margin-block-start: 0;">${he.encode(meta.title)}</h3>`
+              : `<h6 style="color: darkblue; margin-block-start: 0;">${he.encode(meta.url)}</h6>`}
+            ${he.encode(meta.description || '')}
+          </div>
+        </div>`
+
+        el.innerHTML = card
       }
     }))
 

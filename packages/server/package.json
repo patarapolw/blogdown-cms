@@ -12,8 +12,10 @@
   "dependencies": {
     "@patarapolw/qsearch": "^1.1.1",
     "@typegoose/typegoose": "^6.2.2",
+    "axios": "^0.19.2",
     "cloudinary": "^1.19.0",
     "dayjs": "^1.8.19",
+    "domino": "^2.1.4",
     "dotenv": "^8.2.0",
     "fastify": "^2.12.1",
     "fastify-cors": "^3.0.2",
@@ -23,6 +25,7 @@
     "fs-extra": "^8.1.0",
     "mongoose": "^5.8.9",
     "nanoid": "^2.1.10",
+    "page-metadata-parser": "^1.1.4",
     "runtypes": "^4.2.0",
     "seo-friendly-slugify": "^1.0.5"
   },

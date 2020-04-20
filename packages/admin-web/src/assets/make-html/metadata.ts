@@ -1,4 +1,4 @@
-import { getMetadata as metadataParser } from 'page-metadata-parser'
+import { getApi } from '@/api'
 
 export interface IMetadata {
   description?: string
@@ -12,13 +12,10 @@ export interface IMetadata {
   provider: string
 }
 
-export async function getCors (url: string) {
-  return fetch(`https://cors-anywhere.herokuapp.com/${url}`).then(r => r.text())
-}
-
-export async function getMetadata (url: string) {
-  const root = document.createElement('html')
-  root.innerHTML = await getCors(url)
-
-  return metadataParser(root, url)
+export async function getMetadata (url: string): Promise<IMetadata> {
+  return (await getApi({ silent: true }).get('/api/lib/metadata', {
+    params: {
+      url
+    }
+  })).data
 }

@@ -23,11 +23,11 @@
     el-table-column(property="category" label="Category" sortable width="200")
     el-table-column(property="tag" label="Tag" width="200")
       template(slot-scope="scope")
-        el-tag(v-for="t in scope.row.tag" style="margin-right: 1em;" :key="t") {{t}}
+        el-tag.tag(v-for="t in scope.row.tag" style="margin-right: 1em;" :key="t" size="small") {{t}}
   el-pagination(:total="count" :page-size="perPage" :current-page.sync="page")
   el-dialog(:visible.sync="isEditTagsDialog" title="Edit tags" @close="load()")
-    el-tag(v-for="t in tagList" :key="t" closable style="margin-right: 1em;"
-      @close="removeTag($event)") {{t}}
+    el-tag.tag(v-for="t in tagList" :key="t" closable
+      @close="removeTag($event)" size="small") {{t}}
     el-input.input-new-tag(v-model="newTag" v-if="newTagVisible"
       @keyup.enter.native="submitNewTag" @blur="submitNewTag")
     el-button.button-new-tag(v-else size="small" @click="newTagVisible = true") + New Tag
@@ -186,17 +186,19 @@ export default class Query extends Vue {
   }
 
   async submitNewTag () {
-    await api.patch('/api/post/tag', {
-      ids: this.checked.map((el) => el.id),
-      tags: [this.newTag]
-    })
+    if (this.newTag) {
+      await api.patch('/api/post/tag', {
+        ids: this.checked.map((el) => el.id),
+        tags: [this.newTag]
+      })
+    }
   }
 
   async removeTag (evt: any) {
     await api.delete('/api/post/tag', {
       data: {
         ids: this.checked.map((el) => el.id),
-        tags: [evt]
+        tags: [evt.target.innerText]
       }
     })
   }
@@ -205,23 +207,31 @@ export default class Query extends Vue {
 
 <style lang="scss">
 .button-new-tag {
-  height: 32px;
-  line-height: 30px;
+  height: 24px;
+  line-height: 24px;
   padding-top: 0;
   padding-bottom: 0;
+  margin: 0 4px;
 }
 
 .input-new-tag {
   width: 90px;
   vertical-align: bottom;
+  margin-bottom: 5px;
 
   input {
-    height: 32px;
-    line-height: auto;
+    height: 24px;
+    line-height: 24px;
   }
 }
 
 .query-view tr {
   cursor: pointer;
+}
+
+.tag {
+  margin-right: 1em;
+  line-height: 24px;
+  margin-bottom: 5px;
 }
 </style>

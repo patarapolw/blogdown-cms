@@ -22,3 +22,7 @@ a {
 .cursor-pointer {
   cursor: pointer;
 }
+
+*:focus {
+  outline: none;
+}
