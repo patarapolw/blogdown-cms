@@ -1,9 +1,9 @@
 <template lang="pug">
 .editor-preview
   img(v-if="image" style="max-width: 100%; width: 100%;" :src="image")
-  .card-content
-    h1.title {{title}}
-    .content(ref="excerpt")
+  .card-content.unreset
+    h1 {{title}}
+    div(ref="excerpt")
   div(v-show="hasRemaining" style="margin-left: -1em; margin-right: -1em;")
     .cursor-pointer(
       style="display: flex; background-color: #dfe6e9cc; padding: 1em;"
@@ -14,7 +14,7 @@
       span
         fontawesome(icon="caret-down" v-if="isRemainingShown")
         fontawesome(icon="caret-right" v-else)
-    .content(v-show="isRemainingShown" ref="remaining" style="margin: 1em;")
+    .unreset(v-show="isRemainingShown" ref="remaining" style="margin: 1em;")
 </template>
 
 <script lang="ts">
@@ -92,7 +92,7 @@ export default class EditorPreview extends Vue {
   overflow-y: scroll;
   padding: 1em;
 
-  iframe {
+  iframe[class$="pdf"] {
     display: block;
     width: 100% !important;
     max-width: 500px;

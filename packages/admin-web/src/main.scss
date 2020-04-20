@@ -9,24 +9,9 @@ html, body {
   padding: 0;
 }
 
-main {
-  width: 100vw;
-  height: 100vh;
-  font-family: sans-serif;
-  display: flex;
-  flex-direction: column;
-}
-
-input, button {
-  font-size: 16px;
-}
-
 a {
   text-decoration: none;
-}
-
-.cursor-pointer {
-  cursor: pointer;
+  color: blue;
 }
 
 *:focus {

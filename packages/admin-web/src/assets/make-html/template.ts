@@ -88,7 +88,7 @@ liquid.registerTag('speak', {
     return this.word ? `
       <iframe
         src="${href}"
-        style="width: 20px; height: 20px;"
+        style="width: 20px; height: 20px; display: inline-block;"
         frameborder="0" allowtransparency="true"
       ></iframe>` : ''
   }

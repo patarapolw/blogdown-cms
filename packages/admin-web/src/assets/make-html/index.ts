@@ -3,12 +3,12 @@ import stylis from 'stylis'
 import hljs from 'highlight.js'
 import { elementOpen, elementClose, patch } from 'incremental-dom'
 import hljsDefineVue from 'highlightjs-vue'
-import h from 'hyperscript'
 import MarkdownIt from 'markdown-it'
 import emoji from 'markdown-it-emoji'
 import imsize from 'markdown-it-imsize'
 import ghHeading from 'markdown-it-github-headings'
 import he from 'he'
+import h from 'hyperscript'
 
 import { liquid } from './template'
 import { makeIncremental } from './make-incremental'
@@ -122,13 +122,9 @@ export default class MakeHtml {
 
       if (href) {
         const meta = aCardMap.get('href') || await getMetadata(href)
-        const img = h('img', {
+        const img = h('img.container.h-auto', {
           src: meta.image,
           alt: meta.title || meta.url,
-          style: {
-            width: '100%',
-            height: 'auto'
-          },
           onload: (evt: any) => {
             const { target } = evt
 
@@ -147,14 +143,11 @@ export default class MakeHtml {
         el.setAttribute('alt', meta.title || meta.url)
 
         const card = `
-        <div style="${
-          `flex-direction: ${imgPos === 'left' ? 'row' : 'column'}; ` +
-          'display: flex; margin: 10px; padding: 1em;' +
-          'box-sizing: border-box; box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);'
+        <div class="flex m-3 p-4 shadow" style="${
+          `flex-direction: ${imgPos === 'left' ? 'row' : 'column'};`
         }">
           ${meta.image ? `
-          <div style="${
-            'display: flex; align-items: center; justify-content: center; overflow: hidden;' +
+          <div class="flex items-center content-center overflow-hidden" style="${
             (imgPos === 'left'
               ? 'max-width: 100px; margin-right: 1em;'
               : 'max-height: 200px; margin-bottom: 1em;')

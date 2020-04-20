@@ -1,5 +1,5 @@
 <template lang="pug">
-.container.query-view
+.query-view
   el-menu(mode="horizontal" style="display: flex;")
     div(style="flex-grow: 1; pointer-events: none;")
     el-menu-item(index="1")

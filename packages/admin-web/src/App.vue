@@ -1,5 +1,5 @@
 <template lang="pug">
-main
+main.h-screen.w-screen.flex.flex-col.font-sans
   nav.navbar
     router-link.navbar-item(to="/")
       span(style="margin-right: 0.2em;") Blogdown
@@ -10,7 +10,8 @@ main
     .navbar-item
       form.field-inline(@submit.prevent="loadQ")
         fontawesome(icon="search")
-        input(placeholder="Search..." type="search" v-model="q" @keydown.enter="loadQ" spellchecker="off")
+        input.text-base.text-gray-800(placeholder="Search..." type="search"
+          v-model="q" @keydown.enter="loadQ" spellchecker="off")
     a.navbar-item(href="https://www.github.com/patarapolw/blogdown-cms" target="_blank" style="margin-right: 1em;")
       fontawesome(:icon="['fab', 'github']" size="lg")
   router-view
@@ -69,7 +70,6 @@ export default class App extends Vue {
   }
 
   .navbar-item {
-    display: inline-block;
     color: white;
     padding-left: 0.5em;
     padding-right: 0.5em;
