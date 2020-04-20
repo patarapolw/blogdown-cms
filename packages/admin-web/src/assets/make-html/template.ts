@@ -102,8 +102,8 @@ liquid.registerTag('reveal', {
     return this.href ? `
     <iframe
       class="a-reveal"
-      src="${`${process.env.BASE_URL || ''}reveal.html?key=${encodeURIComponent(this.href)}`}"
-      sandbox
+      src="${`${process.env.BASE_URL || ''}reveal.html?slug=${encodeURIComponent(this.href)}`}"
+      sandbox frameborder="0"
     >
     </iframe>` : ''
   }
@@ -116,9 +116,9 @@ liquid.registerTag('pdf', {
   render () {
     return this.href ? `
     <iframe
-      class="a-reveal"
+      class="a-pdf"
       src="${encodeURI(this.href)}"
-      sandbox
+      sandbox frameborder="0"
     >
     </iframe>` : ''
   }
@@ -131,9 +131,9 @@ liquid.registerTag('gpdf', {
   render () {
     return this.href ? `
     <iframe
-      class="a-reveal"
+      class="a-pdf a-gpdf"
       src="https://drive.google.com/file/d/${encodeURIComponent(this.href)}/preview"
-      sandbox
+      sandbox frameborder="0"
     >
     </iframe>` : ''
   }

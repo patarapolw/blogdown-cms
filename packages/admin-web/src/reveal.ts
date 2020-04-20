@@ -1,8 +1,10 @@
 /// <reference path="./reveal.d.ts" />
 import { Serialize } from 'any-serialize'
-import MakeHtml from '@/assets/make-html'
 
+import MakeHtml from '@/assets/make-html'
 import { Matter } from './assets/utils'
+import { getApi } from './api'
+
 import './reveal.scss'
 
 const currentSlide = location.hash
@@ -307,10 +309,18 @@ export class RevealMd {
 async function main () {
   const u = new URL(location.href)
   const id = u.searchParams.get('id')
+  const slug = u.searchParams.get('slug')
   let placeholder = ''
 
   if (id) {
-    const { raw } = await fetch(`/api/post/?id=${id}`).then(r => r.json())
+    const { raw } = await getApi({ silent: true }).get('/api/post/', {
+      params: { id }
+    }).then(r => r.data)
+    placeholder = raw
+  } else if (slug) {
+    const { raw } = await getApi({ silent: true }).get('/api/post/', {
+      params: { slug }
+    }).then(r => r.data)
     placeholder = raw
   }
 

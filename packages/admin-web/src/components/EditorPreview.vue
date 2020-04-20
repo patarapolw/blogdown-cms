@@ -39,7 +39,7 @@ export default class EditorPreview extends Vue {
   matter = new Matter()
 
   makeHtml (side: 'front' | 'back') {
-    return new MakeHtml(this.guid + '-' + side)
+    return new MakeHtml(this.guid + '-' + side, { ghHeading: true })
   }
 
   mounted () {
@@ -88,14 +88,20 @@ export default class EditorPreview extends Vue {
 
 <style lang="scss">
 .editor-preview {
-  max-height: 100%;
+  height: 100%;
   overflow-y: scroll;
   padding: 1em;
 
-  iframe[class$=-viewer] {
+  iframe {
     display: block;
-    width: 100%;
+    width: 100% !important;
     max-width: 500px;
+    min-height: 300px;
+    border: 0;
+  }
+
+  img {
+    max-width: 100%;
   }
 }
 </style>

@@ -25,7 +25,10 @@ export default class MakeHtml {
   html = ''
 
   constructor (
-    public id = 'el-' + Math.random().toString(36).substr(2)
+    public id = 'el-' + Math.random().toString(36).substr(2),
+    opts?: {
+      ghHeading: boolean
+    }
   ) {
     this.md = MarkdownIt({
       breaks: true,
@@ -47,7 +50,12 @@ export default class MakeHtml {
     })
       .use(emoji)
       .use(imsize)
-      .use(ghHeading)
+
+    if (opts) {
+      if (opts.ghHeading) {
+        this.md = this.md.use(ghHeading)
+      }
+    }
 
     this.hp = new HyperPug({
       markdown: (s) => this._mdConvert(s),

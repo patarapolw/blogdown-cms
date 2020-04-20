@@ -1,6 +1,6 @@
 <template lang="pug">
 el-row.editor
-  el-col.editor-col(:span="hasPreview ? 12 : 24" @scroll="onScroll")
+  el-col.editor-col(:span="hasPreview ? 12 : 24" @scroll.native="onScroll")
     .title-nav
       div(style="margin-right: 1em;")
         span(v-if="isLoading || title") {{title}}
@@ -9,7 +9,7 @@ el-row.editor
       el-button.is-warning(@click="hasPreview = !hasPreview") {{hasPreview ? 'Hide' : 'Show'}} Preview
       el-button.is-success(:disabled="!title || !isEdited" @click="save") Save
     codemirror(v-model="markdown" ref="codemirror" @input="onCmCodeChange")
-  el-col(v-if="hasPreview" :span="12")
+  el-col.preview-col(v-if="hasPreview" :span="12")
     RevealPreview(v-if="type === 'reveal'" :id="id" :markdown="markdown" :cursor="cursor")
     EditorPreview(v-else :title="title" :id="id" :markdown="markdown" :scrollSize="scrollSize"
       @excerpt="excerptHtml = $event" @remaining="remainingHtml = $event"
@@ -41,13 +41,12 @@ const ajv = new Ajv()
     const msg = this.canSave ? 'Please save before leaving.' : null
 
     if (msg) {
-      // this.$buefy.dialog.confirm({
-      //   message: msg,
-      //   confirmText: 'Leave',
-      //   cancelText: 'Cancel',
-      //   onConfirm: () => next(),
-      //   onCancel: () => next(false)
-      // })
+      this.$confirm(msg, 'Warning', {
+        confirmButtonText: 'Leave',
+        type: 'warning'
+      })
+        .then(() => next())
+        .catch(() => next(false))
     } else {
       next()
     }
@@ -332,8 +331,8 @@ export default class Editor extends Vue {
     align-items: center;
   }
 
-  .editor-col {
-    height: 100%;
+  .editor-col, .preview-col {
+    height: calc(100vh - 60px);
     overflow-y: scroll;
     display: flex;
     flex-direction: column;

@@ -127,24 +127,21 @@ export default class Query extends Vue {
   }
 
   async doDelete () {
-    // this.$buefy.dialog.confirm({
-    //   title: 'Deleting media',
-    //   message: 'Are you sure you want to <b>delete</b> the selected posts?',
-    //   confirmText: 'Delete',
-    //   type: 'is-danger',
-    //   hasIcon: true,
-    //   onConfirm: async () => {
-    //     await api.delete('/api/post/', {
-    //       data: {
-    //         q: {
-    //           _id: { $in: this.checked.map((el) => el.id) }
-    //         }
-    //       }
-    //     })
+    this.$confirm('Are you sure you want to delete the selected posts?', 'Deleting media', {
+      confirmButtonText: 'Delete',
+      type: 'warning'
+    })
+      .then(async () => {
+        await api.delete('/api/post/', {
+          data: {
+            q: {
+              _id: { $in: this.checked.map((el) => el.id) }
+            }
+          }
+        })
 
-    //     this.load()
-    //   }
-    // })
+        this.load()
+      })
   }
 
   async getFilteredTags (s: string) {
