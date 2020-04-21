@@ -128,11 +128,16 @@
   //   }
   // }
 
-  // table {
-  //   border-collapse: separate;
-  //   border-spacing: 2px;
-  //   border-color: gray;
-  // }
+  td {
+    // border-collapse: separate;
+    // border-spacing: 2px;
+    border: 1px solid gray;
+    padding: 3px;
+  }
+
+  a svg {
+    display: inline-block;
+  }
 
   // thead,
   // tbody,

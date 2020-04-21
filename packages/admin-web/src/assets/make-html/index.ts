@@ -4,8 +4,10 @@ import hljs from 'highlight.js'
 import { elementOpen, elementClose, patch } from 'incremental-dom'
 import hljsDefineVue from 'highlightjs-vue'
 import MarkdownIt from 'markdown-it'
+import { unescapeAll } from 'markdown-it/lib/common/utils'
 import emoji from 'markdown-it-emoji'
 import imsize from 'markdown-it-imsize'
+import mdContainer from 'markdown-it-container'
 import ghHeading from 'markdown-it-github-headings'
 import he from 'he'
 import h from 'hyperscript'
@@ -31,25 +33,53 @@ export default class MakeHtml {
     }
   ) {
     this.md = MarkdownIt({
-      breaks: true,
-      highlight: (str, lang) => {
-        if (lang === 'pug parsed') {
-          return this._pugConvert(str)
-        } else if (lang === 'css parsed') {
-          return this._makeCss(str)
-        }
+      breaks: true
+      // highlight: (str, lang) => {
+      //   if (lang && hljs.getLanguage(lang)) {
+      //     try {
+      //       return hljs.highlight(lang, str).value
+      //     } catch (__) {}
+      //   }
 
-        if (lang && hljs.getLanguage(lang)) {
-          try {
-            return hljs.highlight(lang, str).value
-          } catch (__) {}
-        }
-
-        return '' // use external default escaping
-      }
+      //   return '' // use external default escaping
+      // }
     })
+      .use((md) => {
+        md.renderer.rules.fence = (tokens, idx, options, env, slf) => {
+          const token = tokens[idx]
+          const info = token.info ? unescapeAll(token.info).trim() : ''
+          const content = token.content
+
+          console.log(info)
+
+          if (info === 'pug parsed') {
+            return this._pugConvert(content)
+          } else if (info === 'css parsed') {
+            return this._makeCss(content)
+          }
+
+          return md.renderer.rules.fence!(tokens, idx, options, env, slf)
+        }
+        return md
+      })
       .use(emoji)
       .use(imsize)
+      .use(mdContainer, 'spoiler', {
+        validate: (params: string) => {
+          return params.trim().match(/^spoiler(?:\s+(.*))?$/)
+        },
+        render: (tokens: any[], idx: number) => {
+          var m = tokens[idx].info.trim().match(/^spoiler(?:\s+(.*))?$/)
+
+          if (tokens[idx].nesting === 1) {
+            // opening tag
+            return '<details style="margin-bottom: 1rem;"><summary>' + this.md.utils.escapeHtml(m[1] || 'Spoiler') + '</summary>\n'
+          } else {
+            // closing tag
+            return '</details>\n'
+          }
+        }
+      })
 
     if (opts) {
       if (opts.ghHeading) {
