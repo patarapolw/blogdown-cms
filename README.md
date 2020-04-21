@@ -6,13 +6,13 @@ Content Management System, to provide API endpoints for Static Site Generators o
 
 ## Features
 
-- [Extended markdown](/packages/admin-frontend/src/assets/make-html/index.ts#L35)
-- [Extended with LiquidJS](/packages/admin-frontend/src/assets/make-html/template.ts)
+- [Extended markdown](/packages/admin-web/src/assets/make-html/index.ts#L35)
+- [Extended with LiquidJS](/packages/admin-web/src/assets/make-html/template.ts)
   - `{% github patarapolw/blogdown-cms %}` for embedding GitHub links
   - `{% card url %}` for embedding link previews with image
   - `{% pdf url %}` for embedding PDF
   - `{% reveal slug  %}` for embedding reveal MD
-  - Quoting can be `"` or `'`, and is optional, thanks to [shlex.ts](/packages/admin-frontend/src/assets/make-html/shlex.ts)
+  - Quoting can be `"` or `'`, and is optional, thanks to [shlex.ts](/packages/admin-web/src/assets/make-html/shlex.ts)
 - [Reveal MD](https://github.com/patarapolw/reveal-md) for PowerPoint-esque presentation
 - [Tailwind CSS](https://tailwindcss.com/) for styling
   - You might need to [disable preflight](https://tailwindcss.com/docs/preflight/#disabling-preflight) (a CSS normalizer) to enable native Markdown styling
