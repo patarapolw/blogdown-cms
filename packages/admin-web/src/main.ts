@@ -7,7 +7,6 @@ import './plugins/codemirror'
 import './plugins/fontawesome'
 import './plugins/element-ui'
 import './assets/tailwind.css'
-import './assets/unreset.scss'
 
 import './main.scss'
 

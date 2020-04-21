@@ -12,9 +12,9 @@ import ghHeading from 'markdown-it-github-headings'
 import he from 'he'
 import h from 'hyperscript'
 
-import { liquid } from './template'
 import { makeIncremental } from './make-incremental'
 import { getMetadata, IMetadata } from './metadata'
+import { liquid } from './template'
 
 const aCardMap = new Map<string, IMetadata>()
 
@@ -34,17 +34,10 @@ export default class MakeHtml {
   ) {
     this.md = MarkdownIt({
       breaks: true
-      // highlight: (str, lang) => {
-      //   if (lang && hljs.getLanguage(lang)) {
-      //     try {
-      //       return hljs.highlight(lang, str).value
-      //     } catch (__) {}
-      //   }
-
-      //   return '' // use external default escaping
-      // }
     })
       .use((md) => {
+        const { fence } = md.renderer.rules
+
         md.renderer.rules.fence = (tokens, idx, options, env, slf) => {
           const token = tokens[idx]
           const info = token.info ? unescapeAll(token.info).trim() : ''
@@ -58,7 +51,7 @@ export default class MakeHtml {
             return this._makeCss(content)
           }
 
-          return md.renderer.rules.fence!(tokens, idx, options, env, slf)
+          return fence!(tokens, idx, options, env, slf)
         }
         return md
       })
@@ -126,7 +119,7 @@ export default class MakeHtml {
   }
 
   private _prerender (s: string) {
-    return liquid.parseAndRenderSync(s) || s
+    return liquid.parseAndRenderSync(s)
   }
 
   private async _postrender (dom: HTMLElement) {

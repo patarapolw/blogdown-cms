@@ -2,13 +2,20 @@
 
 Content Management System, to provide API endpoints for Static Site Generators or JAMStacks
 
-![App preview](/docs/preview.gif)
+![App preview](/docs/cmsv2.gif)
 
 ## Features
 
-- [Extended markdown](/packages/admin-frontend/src/assets/make-html/index.ts#L69)
-- [Extended with Handlebars](/packages/admin-frontend/src/assets/make-html/index.ts)
-  - For example `{{{github 'patarapolw/blogdown-cms'}}}`
+- [Extended markdown](/packages/admin-frontend/src/assets/make-html/index.ts#L35)
+- [Extended with LiquidJS](/packages/admin-frontend/src/assets/make-html/template.ts)
+  - `{% github patarapolw/blogdown-cms %}` for embedding GitHub links
+  - `{% card url %}` for embedding link previews with image
+  - `{% pdf url %}` for embedding PDF
+  - `{% reveal slug  %}` for embedding reveal MD
+  - Quoting can be `"` or `'`, and is optional, thanks to [shlex.ts](/packages/admin-frontend/src/assets/make-html/shlex.ts)
+- [Reveal MD](https://github.com/patarapolw/reveal-md) for PowerPoint-esque presentation
+- [Tailwind CSS](https://tailwindcss.com/) for styling
+  - You might need to [disable preflight](https://tailwindcss.com/docs/preflight/#disabling-preflight) (a CSS normalizer) to enable native Markdown styling
 
 ## How it works
 
@@ -19,13 +26,13 @@ This project uses the following endpoints
 - _Cloudinary (optional) is used to store media (e.g. images)_
 - Editing is only enabled offline
   - via `npm run dev`
-  - or `ADMIN=1`
 
 ## Environmental variables
 
 - All the following environmental variables are optional. If `MONGO_URI` is not provided, it will attempt to use [Docker](https://www.docker.com/), which automatically download [mongo](https://hub.docker.com/_/mongo) image.
+- Put the `.env` file inside `/packages/server/`
 
-```dotenv
+```sh
 PORT=
 MONGO_URI=
 CLOUDINARY_API_KEY=
@@ -33,9 +40,15 @@ CLOUDINARY_API_SECRET=
 CLOUDINARY_CLOUD_NAME=
 ```
 
+- Client side `.env` will be needed if you want to host Reveal MD, namely `BASE_URL`
+- Put the `.env` file inside `/packages/admin-web/`
+
+```sh
+BASE_URL=
+```
+
 ## Running the app
 
 - Development mode -- `npm run dev`
-- Admin mode -- `npm run admin`
-- Local mode -- `npm run local`
+- Building the Docker and run -- `npm run build && npm start`
 - Deploy to Heroku -- `npm run deploy` (Don't forget to `heroku create` first)
