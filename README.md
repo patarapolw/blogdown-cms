@@ -16,7 +16,10 @@ Content Management System, to provide API endpoints for Static Site Generators o
 - [Reveal MD](https://github.com/patarapolw/reveal-md) for PowerPoint-esque presentation
 - [Tailwind CSS](https://tailwindcss.com/) for styling
   - You might need to [disable preflight](https://tailwindcss.com/docs/preflight/#disabling-preflight) (a CSS normalizer) to enable native Markdown styling
-- Search syntax is powered by [patarapow/qsearch](https://github.com/patarapolw/qsearch)
+- The Heroku hosted REST API exposes an OpenAPI documentation
+  - You can see the example doc at <https://patarapolw-blogdown.herokuapp.com/api/doc> thanks to [Fastify OAS](https://github.com/SkeLLLa/fastify-oas).
+  - There is a larger doc in development mode (editable API endpoints).
+- Search syntax is powered by [patarapow/qsearch](https://github.com/patarapolw/qsearch) via exposed REST API. So, you can query MongoDB with a string instead of JSON.
 
 ## How it works
 
@@ -24,17 +27,16 @@ This project uses the following endpoints
 
 - MongoDB for storing text-based contents
 - Heroku to provide public API endpoints to MongoDB
-- _Cloudinary (optional) is used to store media (e.g. images)_
+- Cloudinary is used to store media (e.g. images)
 - Editing is only enabled offline
   - via `npm run dev`
 
 ## Environmental variables
 
-- All the following environmental variables are optional. If `MONGO_URI` is not provided, it will attempt to use [Docker](https://www.docker.com/), which automatically download [mongo](https://hub.docker.com/_/mongo) image.
+- All the following environmental variables, except for `MONGO_URI` are optional. If you need a MongoDB server, you might try MongoDB Atlas or [local docker image](https://hub.docker.com/_/mongo).
 - Put the `.env` file inside `/packages/server/`
 
 ```sh
-PORT=
 MONGO_URI=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
