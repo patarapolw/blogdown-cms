@@ -16,6 +16,7 @@ Content Management System, to provide API endpoints for Static Site Generators o
 - [Reveal MD](https://github.com/patarapolw/reveal-md) for PowerPoint-esque presentation
 - [Tailwind CSS](https://tailwindcss.com/) for styling
   - You might need to [disable preflight](https://tailwindcss.com/docs/preflight/#disabling-preflight) (a CSS normalizer) to enable native Markdown styling
+- Search syntax is powered by [patarapow/qsearch](https://github.com/patarapolw/qsearch)
 
 ## How it works
 
