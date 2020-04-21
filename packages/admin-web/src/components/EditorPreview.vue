@@ -37,6 +37,8 @@ export default class EditorPreview extends Vue {
   hasRemaining = false
 
   matter = new Matter()
+  makeFront = this.makeHtml('front')
+  makeBack = this.makeHtml('back')
 
   makeHtml (side: 'front' | 'back') {
     return new MakeHtml(this.guid + '-' + side, { ghHeading: true })
@@ -64,13 +66,13 @@ export default class EditorPreview extends Vue {
     await Promise.all([
       (async () => {
         if (excerpt) {
-          await this.makeHtml('front').render(excerpt, excerptMd)
+          await this.makeFront.render(excerpt, excerptMd)
           this.$emit('excerpt', excerpt.innerHTML)
         }
       })(),
       (async () => {
         if (remaining) {
-          await this.makeHtml('back').render(remaining, remainingMd)
+          await this.makeBack.render(remaining, remainingMd)
           this.$emit('remaining', remaining.innerHTML)
 
           this.hasRemaining = !!remainingMd

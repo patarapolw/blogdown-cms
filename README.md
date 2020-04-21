@@ -6,9 +6,13 @@ Content Management System, to provide API endpoints for Static Site Generators o
 
 ## Features
 
-- [Extended markdown](/packages/admin-frontend/src/assets/make-html/index.ts#L69)
-- [Extended with Handlebars](/packages/admin-frontend/src/assets/make-html/template.ts)
-  - For example `{{{github 'patarapolw/blogdown-cms'}}}`
+- [Extended markdown](/packages/admin-frontend/src/assets/make-html/index.ts#L35)
+- [Extended with LiquidJS](/packages/admin-frontend/src/assets/make-html/template.ts)
+  - `{% github patarapolw/blogdown-cms %}` for embedding GitHub links
+  - `{% card url %}` for embedding link previews with image
+  - `{% pdf url %}` for embedding PDF
+  - `{% reveal slug  %}` for embedding reveal MD
+  - Quoting can be `"` or `'`, and is optional, thanks to [shlex.ts](/packages/admin-frontend/src/assets/make-html/shlex.ts)
 - [Reveal MD](https://github.com/patarapolw/reveal-md) for PowerPoint-esque presentation
 - [Tailwind CSS](https://tailwindcss.com/) for styling
   - You might need to [disable preflight](https://tailwindcss.com/docs/preflight/#disabling-preflight) (a CSS normalizer) to enable native Markdown styling
@@ -47,5 +51,4 @@ BASE_URL=
 
 - Development mode -- `npm run dev`
 - Building the Docker and run -- `npm run build && npm start`
-  - Set environment variable `ADMIN=1` to enable editing
 - Deploy to Heroku -- `npm run deploy` (Don't forget to `heroku create` first)
