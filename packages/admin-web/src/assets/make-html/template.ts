@@ -1,9 +1,11 @@
-import h from 'hyperscript'
 import { Liquid } from 'liquidjs'
+import he from 'he'
 
 import { split } from './shlex'
+import { getMetadata, IMetadata } from './metadata'
 
 export const liquid = new Liquid()
+const aCardMap = new Map<string, IMetadata>()
 
 liquid.registerTag('card', {
   parse (token) {
@@ -13,14 +15,11 @@ liquid.registerTag('card', {
     this.pos = pos
   },
   render () {
-    return this.href ? h('a', {
+    return this.href ? new CardElement({
       href: this.href,
-      target: '_blank',
-      attrs: {
-        is: 'a-card',
-        'img-position': this.pos
-      }
-    }, this.str).outerHTML : ''
+      imgPos: this.pos,
+      str: this.href || this.str
+    }).outerHTML : ''
   }
 })
 
@@ -32,14 +31,11 @@ liquid.registerTag('card-left', {
     this.pos = pos
   },
   render () {
-    return this.href ? h('a', {
+    return this.href ? new CardElement({
       href: this.href,
-      target: '_blank',
-      attrs: {
-        is: 'a-card',
-        'img-position': this.pos || 'left'
-      }
-    }, this.str).outerHTML : ''
+      imgPos: this.pos || 'left',
+      str: this.href || this.str
+    }).outerHTML : ''
   }
 })
 
@@ -48,16 +44,16 @@ liquid.registerTag('github', {
     this.href = split(token.args)[0]
   },
   render () {
-    return this.href ? h('a', {
-      href: this.href.startsWith('https://') ? this.href : `https://github.com/${this.href}`,
-      target: '_blank',
-      attrs: {
-        'img-position': 'left',
-        is: 'a-card'
-      }
-    }, this.href.startsWith('https://')
+    const href = this.href.startsWith('https://') ? this.href : `https://github.com/${this.href}`
+    const str = this.href.startsWith('https://')
       ? `https://github.com/${this.href}`
-      : `GitHub: ${this.href}`).outerHTML : ''
+      : `GitHub: ${this.href}`
+
+    return this.href ? new CardElement({
+      href,
+      str,
+      imgPos: 'left'
+    }).outerHTML : ''
   }
 })
 
@@ -138,3 +134,70 @@ liquid.registerTag('gpdf', {
     </iframe>` : ''
   }
 })
+
+class CardElement {
+  constructor (private opts: {
+    imgPos?: string
+    href: string
+    str?: string
+  }) {}
+
+  get outerHTML () {
+    const { imgPos, href, str } = this.opts
+
+    const meta = aCardMap.get(href)
+    if (!meta) {
+      getMetadata(href).then(meta => {
+        aCardMap.set(href, meta)
+
+        document.querySelectorAll('a[is="a-card"]').forEach(el => {
+          const h1 = el.getAttribute('href')
+          if (h1 === href) {
+            const pos1 = el.getAttribute('data-position')
+            el.innerHTML = CardElement.getInnerHTML(meta, pos1 || '')
+          }
+        })
+      })
+    }
+
+    return `
+      <a is="a-card" style="${
+        `flex-direction: ${imgPos === 'left' ? 'row' : 'column'};` +
+        'display: flex;' +
+        'margin: 1em; padding: 1em;' +
+        'box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);'
+      }" href="${encodeURI(href)}"
+      ${imgPos ? `data-position="${he.escape(imgPos)}"` : ''}
+      rel="noopener" target="_blank">
+        ${meta
+          ? CardElement.getInnerHTML(meta, imgPos || '')
+          : he.escape(str || href)}
+      </a>`
+  }
+
+  private static getInnerHTML (meta: IMetadata, imgPos: string) {
+    const img = `
+    <img style="${
+      'width: 100%; height: auto;'
+    }" ${meta
+      ? (meta.image ? `src="${encodeURI(meta.image)}" ` +
+        `alt="${he.encode(meta.title || meta.url)}" `
+      : '') : ''} />`
+
+    return `${meta.image ? `
+      <div style="${
+        (imgPos === 'left'
+          ? 'max-width: 100px; margin-right: 1em;'
+          : 'max-height: 200px; margin-bottom: 1em;') +
+        'display: flex; align-items: center; justify-content: center;' +
+        'overflow: hidden;'
+      }">${img}
+      </div>` : ''}
+      <div>
+        ${meta.title
+          ? `<h3 style="color: darkblue; margin-block-start: 0;">${he.encode(meta.title)}</h3>`
+          : `<h6 style="color: darkblue; margin-block-start: 0;">${he.encode(meta.url)}</h6>`}
+        ${he.encode(meta.description || '')}
+      </div>`
+  }
+}

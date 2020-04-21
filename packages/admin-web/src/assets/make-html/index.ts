@@ -9,14 +9,10 @@ import emoji from 'markdown-it-emoji'
 import imsize from 'markdown-it-imsize'
 import mdContainer from 'markdown-it-container'
 import ghHeading from 'markdown-it-github-headings'
-import he from 'he'
 import h from 'hyperscript'
 
 import { makeIncremental } from './make-incremental'
-import { getMetadata, IMetadata } from './metadata'
 import { liquid } from './template'
-
-const aCardMap = new Map<string, IMetadata>()
 
 hljsDefineVue(hljs)
 
@@ -42,8 +38,6 @@ export default class MakeHtml {
           const token = tokens[idx]
           const info = token.info ? unescapeAll(token.info).trim() : ''
           const content = token.content
-
-          console.log(info)
 
           if (info === 'pug parsed') {
             return this._pugConvert(content)
@@ -86,7 +80,7 @@ export default class MakeHtml {
     })
   }
 
-  async render (dom: HTMLElement, s: string) {
+  render (dom: HTMLElement, s: string) {
     try {
       this.html = this._mdConvert(s)
     } catch (e) {}
@@ -99,7 +93,7 @@ export default class MakeHtml {
           elementClose('div')
         } catch (_) {}
       })
-      const d1 = await this._postrender(dom)
+      const d1 = this._postrender(dom)
       this.html = d1.innerHTML
     } catch (_) {}
   }
@@ -122,7 +116,7 @@ export default class MakeHtml {
     return liquid.parseAndRenderSync(s)
   }
 
-  private async _postrender (dom: HTMLElement) {
+  private _postrender (dom: HTMLElement) {
     dom.querySelectorAll('iframe').forEach((el) => {
       const w = el.width
       const h = el.height
@@ -136,57 +130,6 @@ export default class MakeHtml {
     dom.querySelectorAll('pre code').forEach((el) => {
       hljs.highlightBlock(el)
     })
-
-    await Promise.all(Array.from(dom.querySelectorAll('a[is="a-card"]')).map(async (el) => {
-      const a = el as HTMLAnchorElement
-
-      const href = el.getAttribute('href')
-      const imgPos = el.getAttribute('img-position')
-
-      if (href) {
-        const meta = aCardMap.get('href') || await getMetadata(href)
-        const img = h('img.container.h-auto', {
-          src: meta.image,
-          alt: meta.title || meta.url,
-          onload: (evt: any) => {
-            const { target } = evt
-
-            if (target && target.parent) {
-              const hEl = target.clientHeight
-              const hParent = target.parent.clientHeight
-
-              if (hParent > hEl) {
-                target.style.width = 'auto'
-                target.style.height = '100%'
-              }
-            }
-          }
-        })
-
-        el.setAttribute('alt', meta.title || meta.url)
-
-        const card = `
-        <div class="flex m-3 p-4 shadow" style="${
-          `flex-direction: ${imgPos === 'left' ? 'row' : 'column'};`
-        }">
-          ${meta.image ? `
-          <div class="flex items-center content-center overflow-hidden" style="${
-            (imgPos === 'left'
-              ? 'max-width: 100px; margin-right: 1em;'
-              : 'max-height: 200px; margin-bottom: 1em;')
-          }">${img.outerHTML}
-          </div>` : ''}
-          <div>
-            ${meta.title
-              ? `<h3 style="color: darkblue; margin-block-start: 0;">${he.encode(meta.title)}</h3>`
-              : `<h6 style="color: darkblue; margin-block-start: 0;">${he.encode(meta.url)}</h6>`}
-            ${he.encode(meta.description || '')}
-          </div>
-        </div>`
-
-        el.innerHTML = card
-      }
-    }))
 
     return dom
   }

@@ -14,8 +14,8 @@ Content Management System, to provide API endpoints for Static Site Generators o
   - `{% reveal slug  %}` for embedding reveal MD
   - Quoting can be `"` or `'`, and is optional, thanks to [shlex.ts](/packages/admin-web/src/assets/make-html/shlex.ts)
 - [Reveal MD](https://github.com/patarapolw/reveal-md) for PowerPoint-esque presentation
-- [Tailwind CSS](https://tailwindcss.com/) for styling
-  - You might need to [disable preflight](https://tailwindcss.com/docs/preflight/#disabling-preflight) (a CSS normalizer) to enable native Markdown styling
+- No specific framework is required for styling
+  - You might need to disable CSS reset to enable native Markdown styling
 - The Heroku hosted REST API exposes an OpenAPI documentation
   - You can see the example doc at <https://patarapolw-blogdown.herokuapp.com/api/doc> thanks to [Fastify OAS](https://github.com/SkeLLLa/fastify-oas).
   - There is a larger doc in development mode (editable API endpoints).
