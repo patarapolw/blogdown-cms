@@ -108,10 +108,10 @@ export default class Editor extends Vue {
       const { items } = evt.clipboardData || {} as any
       if (items) {
         for (const k of Object.keys(items)) {
-          const item = items[k]
+          const item = items[k] as DataTransferItem
           if (item.kind === 'file') {
             evt.preventDefault()
-            const blob: File = item.getAsFile()
+            const blob = item.getAsFile()!
             const formData = new FormData()
             formData.append('file', blob)
             formData.append('type', 'admin')
@@ -120,6 +120,22 @@ export default class Editor extends Vue {
 
             const { data: r } = await api.post('/api/media/upload', formData)
             ins.getDoc().replaceRange(`![${r.filename}](${r.url})`, cursor)
+          } else if (item.type === 'text/plain') {
+            const cursor = ins.getCursor()
+            item.getAsString(async (str) => {
+              if (/^https?:\/\//.test(str)) {
+                const { getMetadata } = await import('../assets/make-html/metadata')
+                const meta = await getMetadata(str)
+                ins.getDoc().replaceRange(
+                  '```yaml link\n' + yaml.safeDump(meta) + '```',
+                  cursor,
+                  {
+                    line: cursor.line,
+                    ch: cursor.ch + str.length
+                  }
+                )
+              }
+            })
           }
         }
       }

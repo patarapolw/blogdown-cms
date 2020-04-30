@@ -4,9 +4,9 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "build": "webpack",
+    "build": "tsc -P src/tsconfig.json",
     "dev": "ADMIN=1 ts-node-dev src/index.ts",
-    "preinstall": "if command -v check-npm-yarn > /dev/null; then check-npm-yarn; fi",
+    "preinstall": "npx check-npm-yarn",
     "start": "node dist/index.js"
   },
   "dependencies": {
@@ -16,7 +16,6 @@
     "cloudinary": "^1.19.0",
     "dayjs": "^1.8.19",
     "domino": "^2.1.4",
-    "dotenv": "^8.2.0",
     "fastify": "^2.12.1",
     "fastify-cors": "^3.0.2",
     "fastify-file-upload": "^2.0.1",
@@ -36,15 +35,7 @@
     "@types/node": "^13.9.0",
     "js-yaml": "^3.13.1",
     "pino-pretty": "^3.6.1",
-    "ts-loader": "^7.0.0",
     "ts-node-dev": "^1.0.0-pre.44",
-    "typescript": "^3.8.3",
-    "webpack": "^4.42.1",
-    "webpack-cli": "^3.3.11",
-    "webpack-node-externals": "^1.7.2"
-  },
-  "engines": {
-    "node": "12.x",
-    "npm": "6.14.3"
+    "typescript": "^3.8.3"
   }
 }

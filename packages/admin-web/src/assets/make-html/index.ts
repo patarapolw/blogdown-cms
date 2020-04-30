@@ -9,10 +9,12 @@ import emoji from 'markdown-it-emoji'
 import imsize from 'markdown-it-imsize'
 import mdContainer from 'markdown-it-container'
 import ghHeading from 'markdown-it-github-headings'
-import h from 'hyperscript'
+import he from 'he'
+import yaml from 'js-yaml'
 
 import { makeIncremental } from './make-incremental'
 import { liquid } from './template'
+import { IMetadata } from './metadata'
 
 hljsDefineVue(hljs)
 
@@ -43,6 +45,8 @@ export default class MakeHtml {
             return this._pugConvert(content)
           } else if (info === 'css parsed') {
             return this._makeCss(content)
+          } else if (info === 'yaml link') {
+            return this._makeLink(yaml.safeLoad(content))
           }
 
           return fence!(tokens, idx, options, env, slf)
@@ -145,5 +149,46 @@ export default class MakeHtml {
 
   private _makeCss (s: string) {
     return `<style>${stylis(`.${this.id}`, s.replace(/\s+/gs, ' '))}</style>`
+  }
+
+  private _makeLink (meta: IMetadata & {
+    imgPos?: string
+  }) {
+    const imgPos = meta.imgPos || 'left'
+
+    const img = `
+    <img style="${
+      imgPos === 'left'
+        ? 'max-width: 200px; margin-right: 1em; width: 100%; height: auto;'
+        : 'margin-bottom: 1em; width: 100%; height: auto;'
+    }" ${meta
+      ? (meta.image ? `src="${encodeURI(meta.image)}" ` +
+        `alt="${he.encode(meta.title || meta.url)}" `
+      : '') : ''} />`
+
+    const innerHTML = `${meta.image ? `
+      <div style="${
+        (imgPos === 'left' ? 'max-width: 200px; margin-right: 1em;' : '') +
+        'display: flex; align-items: center; justify-content: center;' +
+        'overflow: hidden;'
+      }">${img}
+      </div>` : ''}
+      <div>
+        ${meta.title
+          ? `<h3 style="color: darkblue; margin-block-start: 0;">${he.encode(meta.title)}</h3>`
+          : `<h6 style="color: darkblue; margin-block-start: 0;">${he.encode(meta.url)}</h6>`}
+        ${he.encode(meta.description || '')}
+      </div>`
+
+    return `
+    <a is="a-card" style="${
+      `flex-direction: ${imgPos === 'left' ? 'row' : 'column'};` +
+      'display: flex;' +
+      'margin: 1em; padding: 1em;' +
+      'box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);'
+    }" href="${encodeURI(meta.url)}"
+    rel="noopener" target="_blank">
+      ${innerHTML}
+    </a>`
   }
 }
