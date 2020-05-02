@@ -43,11 +43,12 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       summary: 'Query for posts',
       body: {
         type: 'object',
+        required: ['projection'],
         properties: {
           q: { type: 'string' },
           cond: { type: 'object' },
           offset: { type: 'number' },
-          limit: { type: 'number' },
+          limit: { type: ['number', 'null'] },
           sort: {
             type: 'object',
             required: ['key', 'desc'],
@@ -58,17 +59,30 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
           },
           projection: {
             type: 'object',
-            additionalProperties: {
-              type: 'number',
-              enum: [0, 1]
+            minProperties: 1,
+            properties: {
+              _id: { enum: [0, 1] },
+              slug: { enum: [0, 1] },
+              title: { enum: [0, 1] },
+              tag: { enum: [0, 1] },
+              category: { enum: [0, 1] },
+              header: { enum: [0, 1] },
+              excerpt: { enum: [0, 1] },
+              remaining: { enum: [0, 1] },
+              excerptRaw: { enum: [0, 1] },
+              raw: { enum: [0, 1] },
+              type: { enum: [0, 1] },
+              date: { enum: [0, 1] },
+              createdAt: { enum: [0, 1] },
+              updatedAt: { enum: [0, 1] }
             }
           },
-          count: { type: 'boolean' }
+          hasCount: { type: 'boolean' }
         }
       }
     }
   }, async (req) => {
-    let { q = '', cond, offset, limit, sort, projection, count } = req.body
+    let { q = '', cond, offset, limit = 10, sort, projection, hasCount } = req.body
 
     const qSearch = new QSearch({
       dialect: 'mongodb',
@@ -98,11 +112,11 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       {
         $match: q
       },
-      // {
-      //   $project: {
-      //     raw: 0
-      //   }
-      // },
+      {
+        $addFields: {
+          excerptRaw: { $arrayElemAt: [{ $split: ['$raw', '<!-- excerpt_separator -->'] }, 1] }
+        }
+      },
       ...(projection ? [
         {
           $project: projection
@@ -129,7 +143,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
 
     let rCount: number | undefined
 
-    if (count) {
+    if (hasCount) {
       rCount = await PostModel.find(q).countDocuments()
     }
 

@@ -2,7 +2,6 @@ import fs from 'fs'
 import path from 'path'
 import { Readable } from 'stream'
 import assert from 'assert'
-import dotenv from 'dotenv'
 
 import { FastifyInstance } from 'fastify'
 // @ts-ignore
@@ -12,8 +11,6 @@ import cloudinary from 'cloudinary'
 import { GridFSBucket } from 'mongodb'
 import { cachedDb } from '../db'
 import { tmpDir } from '../config'
-
-dotenv.config()
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
   let gridFS: GridFSBucket | null = null

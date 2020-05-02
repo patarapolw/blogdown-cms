@@ -105,7 +105,15 @@ export default class Query extends Vue {
         key: this.sort.prop,
         desc: this.sort.order === 'descending'
       },
-      count: true
+      hasCount: true,
+      projection: {
+        slug: 1,
+        title: 1,
+        tag: 1,
+        category: 1,
+        type: 1,
+        date: 1
+      }
     })
 
     this.count = r.data.count

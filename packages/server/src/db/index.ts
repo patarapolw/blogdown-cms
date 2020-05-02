@@ -1,8 +1,6 @@
 import { prop, getModelForClass } from '@typegoose/typegoose'
 import mongoose from 'mongoose'
 import { String } from 'runtypes'
-import dotenv from 'dotenv'
-dotenv.config()
 
 export let cachedDb: mongoose.Mongoose | null = null
 
