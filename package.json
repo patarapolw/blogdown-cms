@@ -17,10 +17,10 @@
   "license": "ISC",
   "author": "",
   "scripts": {
-    "build": "docker build -t blogdown .",
+    "build": "docker build -t gcr.io/$PROJECT_ID/blogdown .",
     "dev": "concurrently 'cd packages/server && npm run dev' 'cd packages/admin-web && npm run serve'",
-    "start": "docker run -p 8080:8080 blogdown",
-    "deploy": "heroku container:push web"
+    "start": "docker run -p 8080:8080 gcr.io/$PROJECT_ID/blogdown",
+    "deploy": "docker push gcr.io/$PROJECT_ID/blogdown"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^2.24.0",

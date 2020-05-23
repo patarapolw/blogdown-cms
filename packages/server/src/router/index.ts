@@ -33,7 +33,7 @@ const router = (f: FastifyInstance, _: any, next: () => void) => {
       },
       servers: [
         {
-          url: 'https://patarapolw-blogdown.herokuapp.com',
+          url: 'https://bd.polv.cc',
           description: 'Online server'
         },
         {
