@@ -1,3 +1,4 @@
 packages/admin-frontend
 **/node_modules
 packages/**/dist
+.env

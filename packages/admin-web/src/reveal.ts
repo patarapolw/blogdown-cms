@@ -18,8 +18,6 @@ declare global {
   }
 }
 
-const matter = new Matter()
-
 export class RevealMd {
   _headers: RevealOptions | null = null
   _queue: Array<(r?: RevealStatic) => void> = []
@@ -34,6 +32,7 @@ export class RevealMd {
   }
 
   cdn = 'https://cdn.jsdelivr.net/npm/reveal.js@3.9.2/'
+  matter = new Matter()
 
   constructor (
     placeholder: string
@@ -63,9 +62,9 @@ export class RevealMd {
       id: 'reveal-theme'
     }))
 
-    const { header, content } = matter.parse(placeholder)
+    const { header, content } = this.matter.parse(placeholder)
 
-    this.headers = header
+    this.headers = header || {}
     this.markdown = content
 
     this.onReady(() => {
@@ -158,7 +157,10 @@ export class RevealMd {
   }
 
   set markdown (s: string) {
-    const newRaw = s.split('\n===\n').map((el, x) => {
+    const { header, content } = this.matter.parse(s)
+    this.headers = header || this.headers
+
+    const newRaw = content.split('\n===\n').map((el, x) => {
       return el.split('\n--\n').map((ss, y) => {
         let section = this.getSlide(x)
         let subSection = this.getSlide(x, y)
@@ -241,9 +243,9 @@ export class RevealMd {
   }
 
   update (raw: string) {
-    const { header, content } = matter.parse(raw)
+    const { header, content } = this.matter.parse(raw)
     this.markdown = content
-    this.headers = header
+    this.headers = header || {}
   }
 
   onReady (fn?: (reveal?: RevealStatic) => void) {
