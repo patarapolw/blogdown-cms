@@ -57,6 +57,13 @@ import router from './router'
     app.get('*', (_, reply) => {
       reply.sendFile('index.html')
     })
+  } else {
+    app.register(fastifyStatic, {
+      root: path.resolve('public')
+    })
+    app.get('*', (_, reply) => {
+      reply.sendFile('index.html')
+    })
   }
 
   app.register(router, { prefix: '/api' })

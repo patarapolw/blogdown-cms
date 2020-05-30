@@ -1,6 +1,6 @@
 {
   "name": "blogdown-cms",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Content Management System, to provide API endpoints for Static Site Generators or JAMStacks",
   "keywords": [
     "cms",
