@@ -18,7 +18,7 @@ export class Matter {
   header = {} as any
 
   parse (s: string) {
-    const m = /^---\n(.+?)\n---\n(.+)$/s.exec(s)
+    const m = /^---\n(.*?)\n---\n(.*)$/s.exec(s)
     if (m) {
       try {
         this.header = yaml.safeLoad(m[1], {
