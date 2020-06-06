@@ -6,7 +6,7 @@ let setLoadingHandle: NodeJS.Timeout | null = null
 
 export function getApi (opts: { silent: boolean }) {
   const api = axios.create({
-    baseURL: `http://localhost:${process.env.VUE_APP_SERVER_PORT}`
+    baseURL: process.env.VUE_APP_SERVER_PORT ? `http://localhost:${process.env.VUE_APP_SERVER_PORT}` : undefined
   })
 
   if (!opts.silent) {

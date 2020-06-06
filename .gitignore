@@ -3,4 +3,7 @@ dist
 yarn-error.log
 .env
 tmp
-docker-compose.yml
+
+# User directories
+/media/
+/db/

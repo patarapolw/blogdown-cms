@@ -33,7 +33,7 @@ export class Matter {
     }
 
     return {
-      header: null,
+      header: {},
       content: s
     }
   }

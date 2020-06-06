@@ -26,13 +26,15 @@
     "nanoid": "^2.1.10",
     "page-metadata-parser": "^1.1.4",
     "runtypes": "^4.2.0",
-    "seo-friendly-slugify": "^1.0.5"
+    "seo-friendly-slugify": "^1.0.5",
+    "wait-on": "^5.0.0"
   },
   "devDependencies": {
     "@types/fs-extra": "^8.1.0",
     "@types/mongoose": "^5.5.43",
     "@types/nanoid": "^2.1.0",
     "@types/node": "^13.9.0",
+    "@types/wait-on": "^4.0.0",
     "js-yaml": "^3.13.1",
     "pino-pretty": "^3.6.1",
     "ts-node-dev": "^1.0.0-pre.44",

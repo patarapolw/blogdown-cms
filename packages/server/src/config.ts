@@ -1,5 +1,4 @@
 import path from 'path'
-import fs from 'fs-extra'
 
 export const config = {
   grayMatter: {
@@ -7,9 +6,9 @@ export const config = {
   }
 }
 
-export const tmpDir = path.resolve('tmp')
+export const mediaPath = path.resolve('media')
 
-fs.mkdirpSync(tmpDir)
-fs.writeFileSync(path.join(tmpDir, '.gitignore'), `*.*
-!.gitignore
-`)
+// fs.mkdirpSync(tmpDir)
+// fs.writeFileSync(path.join(tmpDir, '.gitignore'), `*.*
+// !.gitignore
+// `)

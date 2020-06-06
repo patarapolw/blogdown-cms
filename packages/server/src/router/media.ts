@@ -10,7 +10,7 @@ import dayjs from 'dayjs'
 import cloudinary from 'cloudinary'
 import { GridFSBucket } from 'mongodb'
 import { cachedDb } from '../db'
-import { tmpDir } from '../config'
+import { mediaPath } from '../config'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
   let gridFS: GridFSBucket | null = null
@@ -41,7 +41,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
   }, async (req) => {
     const { filename, newFilename } = req.body
 
-    fs.renameSync(path.join(tmpDir, filename), path.join(tmpDir, newFilename))
+    fs.renameSync(path.join(mediaPath, filename), path.join(mediaPath, newFilename))
 
     if (gridFS) {
       await cachedDb!.connection.db.collection('fs.files').findOneAndUpdate({
@@ -88,7 +88,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     filename = (() => {
       const originalFilename = filename
 
-      while (fs.existsSync(path.resolve(tmpDir, filename))) {
+      while (fs.existsSync(path.resolve(mediaPath, filename))) {
         const [base, ext] = originalFilename.split(/(\.[a-z]+)$/i)
         filename = base + '-' + Math.random().toString(36).substr(2) + (ext || '.png')
       }
@@ -118,9 +118,9 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
         filename
       }
     } else {
-      file.mv(path.join(tmpDir, filename))
+      file.mv(path.join(mediaPath, filename))
 
-      const r = await cloudinary.v2.uploader.upload(path.join(tmpDir, filename), {
+      const r = await cloudinary.v2.uploader.upload(path.join(mediaPath, filename), {
         public_id: joinPath('blogdown', filename).replace(/\.[^.]+?$/, '')
       })
 

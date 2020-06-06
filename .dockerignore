@@ -1,4 +1,29 @@
-packages/admin-frontend
-**/node_modules
-packages/**/dist
-.env
+# Ignore everything
+**
+
+# Allow files and directories
+!/packages/admin-web/public
+!/packages/admin-web/src
+!/packages/admin-web/.stylelintrc.json
+!/packages/admin-web/babel.config.js
+!/packages/admin-web/package-lock.json
+!/packages/admin-web/yarn.lock
+!/packages/admin-web/package.json
+!/packages/admin-web/postcss.config.js
+!/packages/admin-web/tailwind.config.js
+!/packages/admin-web/tsconfig.json
+!/packages/admin-web/vue.config.js
+
+
+!/packages/server/src
+!/packages/server/package-lock.json
+!/packages/server/yarn.lock
+!/packages/server/package.json
+!/packages/server/tsconfig.json
+
+# Ignore unnecessary files inside allowed directories
+# This should go after the allowed directories
+# **/*~
+# **/*.log
+# **/.DS_Store
+# **/Thumbs.db

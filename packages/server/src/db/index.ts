@@ -1,6 +1,6 @@
 import { prop, getModelForClass } from '@typegoose/typegoose'
 import mongoose from 'mongoose'
-import { String } from 'runtypes'
+import waitOn from 'wait-on'
 
 export let cachedDb: mongoose.Mongoose | null = null
 
@@ -21,8 +21,17 @@ export class Post {
 export const PostModel = getModelForClass(Post, { schemaOptions: { timestamps: true } })
 
 export async function mongooseConnect () {
-  if (!cachedDb) {
-    cachedDb = await mongoose.connect(String.check(process.env.MONGO_URI), {
+  if (!cachedDb && process.env.MONGO_URI) {
+    if (!process.env.MONGO_URI.startsWith('mongodb+srv')) {
+      await waitOn({
+        resources: [
+          'tcp:mongodb:27017'
+        ],
+        timeout: 30000
+      })
+    }
+
+    cachedDb = await mongoose.connect(process.env.MONGO_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       useCreateIndex: true

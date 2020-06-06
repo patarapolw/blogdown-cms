@@ -1,0 +1,22 @@
+version: '3'
+services:
+  mongodb:
+    image: mongo
+    # ports:
+    #   - 27017:27017
+    volumes: 
+      - './db:/data/db'
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.admin
+    image: patarapolw/blogdown:admin
+    depends_on: 
+      - mongodb
+    environment: 
+      - MONGO_URI=mongodb://mongodb:27017/blogdown
+      - ADMIN=1
+    ports:
+      - '8080:8080'
+    volumes: 
+      - './media:/media'

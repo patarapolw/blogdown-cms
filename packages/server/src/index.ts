@@ -50,21 +50,19 @@ import router from './router'
   const port = parseInt(process.env.PORT || '8080')
   app.register(require('fastify-cors'))
 
-  if (process.env.ADMIN) {
+  if (process.env.NODE_ENV === 'development') {
     app.register(fastifyStatic, {
       root: path.resolve('../admin-frontend/dist')
-    })
-    app.get('*', (_, reply) => {
-      reply.sendFile('index.html')
     })
   } else {
     app.register(fastifyStatic, {
       root: path.resolve('public')
     })
-    app.get('*', (_, reply) => {
-      reply.sendFile('index.html')
-    })
   }
+
+  app.setNotFoundHandler((_, reply) => {
+    reply.sendFile('index.html')
+  })
 
   app.register(router, { prefix: '/api' })
 
