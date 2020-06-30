@@ -3,23 +3,16 @@ import path from 'path'
 import fastify from 'fastify'
 import fastifyStatic from 'fastify-static'
 
-import { mongooseConnect } from './db'
+import { initDb } from './db/local'
+import { mediaPath, PORT } from './config'
 import router from './router'
-
 ;(async () => {
-  await mongooseConnect()
+  await initDb()
 
   const app = fastify({
     logger: {
-      prettyPrint: (() => {
-        try {
-          require.resolve('pino-pretty')
-          return true
-        } catch (_) {}
-
-        return false
-      })()
-    }
+      prettyPrint: true,
+    },
   })
   app.addHook('preHandler', function (req, _, done) {
     if (req.body) {
@@ -47,34 +40,38 @@ import router from './router'
     done()
   })
 
-  const port = parseInt(process.env.PORT || '8080')
   app.register(require('fastify-cors'))
-
-  if (process.env.ADMIN) {
-    app.register(fastifyStatic, {
-      root: path.resolve('../admin-frontend/dist')
-    })
-    app.get('*', (_, reply) => {
-      reply.sendFile('index.html')
-    })
-  } else {
-    app.register(fastifyStatic, {
-      root: path.resolve('public')
-    })
-    app.get('*', (_, reply) => {
-      reply.sendFile('index.html')
-    })
-  }
 
   app.register(router, { prefix: '/api' })
 
+  app.register(
+    (f, _, next) => {
+      f.register(fastifyStatic, {
+        root: mediaPath(),
+      })
+
+      next()
+    },
+    { prefix: '/media' }
+  )
+
+  app.register(fastifyStatic, {
+    root: path.resolve('public'),
+  })
+
+  app.setNotFoundHandler((_, reply) => {
+    reply.sendFile('index.html')
+  })
+
   app.listen(
-    port,
+    PORT,
     process.env.NODE_ENV !== 'development' ? '0.0.0.0' : '127.0.0.1',
     (err) => {
       if (err) {
         throw err
       }
+
+      console.log(`Go to http://localhost:${PORT}`)
     }
   )
 })().catch(console.error)
