@@ -1,6 +1,8 @@
-import { prop, getModelForClass } from '@typegoose/typegoose'
+import { prop, getModelForClass, setGlobalOptions, Severity } from '@typegoose/typegoose'
 import mongoose from 'mongoose'
 import { String } from 'runtypes'
+
+setGlobalOptions({ options: { allowMixed: Severity.ALLOW } })
 
 export let cachedDb: mongoose.Mongoose | null = null
 

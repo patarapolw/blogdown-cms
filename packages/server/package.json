@@ -6,7 +6,6 @@
   "scripts": {
     "build": "tsc -P src/tsconfig.json",
     "dev": "ADMIN=1 ts-node-dev src/index.ts",
-    "preinstall": "npx check-npm-yarn",
     "start": "node dist/index.js"
   },
   "dependencies": {
