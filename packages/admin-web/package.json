@@ -31,7 +31,7 @@
     "hyperscript": "^2.0.2",
     "incremental-dom": "^0.7.0",
     "js-yaml": "^3.13.1",
-    "liquidjs": "^9.11.10",
+    "liquidjs": "^9.14.0",
     "markdown-it": "^10.0.0",
     "markdown-it-container": "^2.0.0",
     "markdown-it-emoji": "^1.4.0",
