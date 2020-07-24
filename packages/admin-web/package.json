@@ -27,7 +27,7 @@
     "he": "^1.2.0",
     "highlight.js": "^9.18.1",
     "htmlparser2": "^4.1.0",
-    "hyperpug": "^1.1.1",
+    "hyperpug": "^1.3.2",
     "hyperscript": "^2.0.2",
     "incremental-dom": "^0.7.0",
     "js-yaml": "^3.13.1",
