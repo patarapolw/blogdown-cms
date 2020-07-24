@@ -13,7 +13,7 @@
     "@fortawesome/free-solid-svg-icons": "^5.13.0",
     "@fortawesome/vue-fontawesome": "^0.1.9",
     "@patarapolw/highlightjs-vue": "^1.0.0-dev4",
-    "@types/codemirror": "0.0.91",
+    "@types/codemirror": "0.0.96",
     "@types/he": "^1.1.1",
     "@types/hyperscript": "0.0.3",
     "@types/js-yaml": "^3.12.3",
