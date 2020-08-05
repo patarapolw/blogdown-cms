@@ -15,7 +15,7 @@
     "cloudinary": "^1.19.0",
     "dayjs": "^1.8.19",
     "domino": "^2.1.4",
-    "fastify": "^2.12.1",
+    "fastify": "^2.15.1",
     "fastify-cors": "^3.0.2",
     "fastify-file-upload": "^2.0.1",
     "fastify-oas": "^2.5.2",
