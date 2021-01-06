@@ -11,7 +11,7 @@
   "dependencies": {
     "@patarapolw/qsearch": "^1.1.1",
     "@typegoose/typegoose": "^6.2.2",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "cloudinary": "^1.19.0",
     "dayjs": "^1.8.19",
     "domino": "^2.1.4",
