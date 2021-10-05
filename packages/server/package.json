@@ -19,7 +19,7 @@
     "fastify-cors": "^3.0.2",
     "fastify-file-upload": "^2.0.1",
     "fastify-oas": "^2.5.2",
-    "fastify-static": "^2.6.0",
+    "fastify-static": "^4.2.4",
     "fs-extra": "^8.1.0",
     "mongoose": "^5.8.9",
     "nanoid": "^2.1.10",
