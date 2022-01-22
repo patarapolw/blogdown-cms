@@ -22,7 +22,7 @@
     "fastify-static": "^2.6.0",
     "fs-extra": "^8.1.0",
     "mongoose": "^5.8.9",
-    "nanoid": "^2.1.10",
+    "nanoid": "^3.1.31",
     "page-metadata-parser": "^1.1.4",
     "runtypes": "^4.2.0",
     "seo-friendly-slugify": "^1.0.5"
